@@ -1,9 +1,13 @@
-
-// panteli marinis - 0571213
-// bacteria game
+/*
+  Bacteria-Zapper
+  Panteli Marinis - 0571213
+  Blake McDonald - 0575698
+  COMP-4471-Computer Graphics
+  Lakehead University
+*/
 
 function draw_circle(x,y,r,color) {
-/*======= Creating a canvas =========*/
+/*======= Creating a canvas variable =========*/
 
 	var canvas = document.getElementById('myCanvas');
 	var gl = canvas.getContext('experimental-webgl');
@@ -31,13 +35,14 @@ function draw_circle(x,y,r,color) {
 		vertices.push(y2);
 		vertices.push(0);
 	}
+	//If the distance of your click is less than or equal to the position
 
 	// Create an empty buffer object
 	var vertex_buffer = gl.createBuffer();
 
 	// Bind appropriate array buffer to it
 	gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
-  
+
 	// Pass the vertex data to the buffer
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
@@ -126,69 +131,98 @@ function draw_circle(x,y,r,color) {
 
 	// POINTS, LINE_STRIP, LINE_LOOP, LINES,
 	// TRIANGLE_STRIP,TRIANGLE_FAN, TRIANGLES
-
-	//document.getElementById("time").value = time;
-	//time=time+1;
-	//t = setTimeout(timedCount, 1000);
-	/*function timer()
-	{
-		var sec=0;
-		var timer = setInterval(function(){
-			document.getElementById('timerDisplay').innerHTML='00:'+sec;
-			sec++;
-		},1000);
-		
-	}*/
 }// end function draw_circle
 
-// set radius, angle, seconds.
+//Randomly sets the passed number to a negative or positive, returns the new(or same) number
+function randomSign(n){
+	if(Math.random() >= 0.5){
+		n = n*-1;
+	}
+	return n;
+}
+
+class Bacteria {
+	constructor(x,y,r,id) {
+		this.r = r;
+		this.x = x;
+		this.y = y;
+		this.id = id;
+	}
+
+	setSize(r) {
+		this.r = r;
+	}
+
+	increaseSize(r) {
+		this.r += r;
+	}
+}
+
+// Set radius and size for game-circle
 var r=0.8;
 var i=0.5;
+
+//Radius for bacteria
 var size=0.1;
+
+//Variables for Bacteria data
+var totBac = 10;
+var bacArr = [];
+var rAngle = 0;
+var tempX = 0;
+var tempY = 0;
+
+//Create and push bacteria objects into an array
+for(var i = 0; i<totBac; i++){
+
+	//Set a random angle for the x and y to be calculated with sin and cos
+	rAngle = Math.random();
+
+	/*With a 50% chance to swap which axis calculates with which trig function,
+		it ensures that all possible points along the circumference of the 'game-
+		circle' have a chance of spawning a bacteria.
+
+		For some reason not all points of the circumference can be calculated
+		by always using sine for x and cosine for y. I'm not sure why it happens
+		like this, but for now this spaghetti will do.
+
+		The random sign infront of the "r" variable, corresponding to the radius
+		of the 'game-circle', furthers the posibility for bacteria to spawn in any
+		'quadrant' of the 'game-circle'
+	*/
+	if (Math.random() >= 0.5) {
+		tempX = randomSign(r)*Math.sin(rAngle);
+		tempY = randomSign(r)*Math.cos(rAngle);
+	} else {
+		tempX = randomSign(r)*Math.cos(rAngle);
+		tempY = randomSign(r)*Math.sin(rAngle);
+	}
+
+	//Create and then push a Bacteria object into bacArr
+	bacArr.push(new Bacteria(tempX, tempY, 0.1, i));
+}
+
 var timer = setInterval(function(){
-		
+
 	document.getElementById('timerDisplay').innerHTML=timer;
+
 	timer++;
-	// use a for loop eventually 
-	if (timer >=5){draw_circle(-r*Math.cos(i),r*Math.sin(i),size,'0.5, 0, 0, 0.5');size=size+0.002;} // red
-	if (timer >= 10){draw_circle(-r*Math.sin(i),r*Math.cos(i),size,'2, 2, 0, 0.5');} //yellow
-	if (timer >= 15){draw_circle(r*Math.sin(i),r*Math.cos(i),size,'0, 0, 0.5, 0.5');} //blue
-	if (timer >= 20){draw_circle(r*Math.cos(i),r*Math.sin(i),size,'0, 1, 0.5, 0.5');} // teal
-	if (timer >= 22){draw_circle(r*Math.cos(i),-r*Math.sin(i),size,'1, 0, 0.5, 0.5');} // purpleish
-	if (timer >= 25){draw_circle(r*Math.sin(i),-r*Math.cos(i),size,'0.9, 0.18, 1.42, 0.5');}// pinkish
-	if (timer >= 30){draw_circle(-r*Math.sin(i),-r*Math.cos(i),size,'0.5, 0.2, 0.1, 0.5');} // orange
-	if (timer >= 31){draw_circle(-r*Math.cos(i),-r*Math.sin(i),size,'0, 0.2, 0.1, 0.5');} //green
 
-	if (timer >= 33){draw_circle(r*Math.sin(0),r*Math.cos(0),size,'0.3, 0, 0, 0.5');} // 12
-	if (timer >= 34){draw_circle(r*Math.cos(0),-r*Math.sin(0),size,'0.4, 0.3, 0, 0.5');} // 3
-	if (timer >= 35){draw_circle(-r*Math.sin(0),-r*Math.cos(0),size,'0.2, 0, 0.5, 0.5');} // 6
-	if (timer >= 36){draw_circle(-r*Math.cos(0),r*Math.sin(0),size,'0, 0.2, 0.3, 0.5');} // 9
-	
-	if (timer>=40){timer=0;}
-	
-	// drawing disk
+	//Loop through all bacteria objects, use their data to draw to canvas
+	//Increase the size of each bacteria by 0.005 each tick
+	for (let i in bacArr) {
+		draw_circle(bacArr[i].x,bacArr[i].y,bacArr[i].r,'0.5, 0, 0, 0.5');
+		bacArr[i].increaseSize(0.005);
+	}
+
+	//For now, just reset timer and bacteria size after 20 seconds
+	if(timer > 20) {
+		timer=0;
+		for (let i in bacArr) {
+			bacArr[i].setSize(0.1);
+		}
+	}
+
+	// Draw the game surface disk
 	draw_circle(0,0,0.8,'0.0, 0.5, 0.0, 0.5');
-} ,	600); // 1000 = 1s, 600= slightly faster 
-
-
-
-
-
-/*
-	// drawing bacteria (angles)
-	draw_circle(-r*Math.cos(i),r*Math.sin(i),0.1,'0.5, 0, 0, 0.5'); // red
-	draw_circle(-r*Math.sin(i),r*Math.cos(i),0.1,'2, 2, 0, 0.5'); //yellow
-	draw_circle(r*Math.cos(i),r*Math.sin(i),0.1,'0, 0, 0.5, 0.5'); //teal
-	draw_circle(r*Math.sin(i),r*Math.cos(i),0.1,'0, 1, 0.5, 0.5'); // light blue
-	draw_circle(r*Math.cos(i),-r*Math.sin(i),0.1,'1, 0, 0.5, 0.5'); // purpleish
-	draw_circle(r*Math.sin(i),-r*Math.cos(i),0.1,'0.9, 0.18, 1.42, 0.5'); // pinkish
-	draw_circle(-r*Math.cos(i),-r*Math.sin(i),0.1,'0.5, 0.2, 0.1, 0.5'); // orange
-	draw_circle(-r*Math.sin(i),-r*Math.cos(i),0.1,'0, 0.2, 0.1, 0.5'); //green
-}// Drawing bacteria on x,y axis
-if (sec >=20){
-	draw_circle(r*Math.sin(0),r*Math.cos(0),0.1,'0.3, 0, 0, 0.5'); // 12
-	draw_circle(r*Math.cos(0),-r*Math.sin(0),0.1,'0.4, 0.3, 0, 0.5'); // 3
-	draw_circle(-r*Math.sin(0),-r*Math.cos(0),0.1,'0.2, 0, 0.5, 0.5'); // 6
-	draw_circle(-r*Math.cos(0),r*Math.sin(0),0.1,'0, 0.2, 0.3, 0.5'); // 9
-} 
-*/
+} ,	600); // 1000 = 1s, 600= slightly faster
