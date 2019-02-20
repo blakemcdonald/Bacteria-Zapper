@@ -8,7 +8,7 @@
         <title> Bacteria Zapper</title>
     </head>
 
-    <body onload="draw_circle()">
+    <body onload="main()">
 
         <canvas id="myCanvas" width="600" height="600">
             use browser that supports canvas
@@ -16,8 +16,8 @@
 
         <script src="bacteria.js"> </script>
 
-        <h1> Time: <span id="timerDisplay"></span></h1>
+        <h1> Score: <span id="scoreDisplay"></span></h1>
         <p>Click the 'bacteria' to destroy</p>
-
+        <span id="fps"></span>
     </body>
 </html>
