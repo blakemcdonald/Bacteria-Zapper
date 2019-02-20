@@ -11,6 +11,7 @@ var main = function() {
 	var score = 0;
 	var numKilledBac = 0;
 	var missClicks = 0;
+	var winKillAmt = 20;
 
 	//Variables for calculating fps
 	var filterStrength = 20;
@@ -153,7 +154,7 @@ var main = function() {
 		var y = e.clientY;
 		var hit = false;
 		var rect = e.target.getBoundingClientRect();
-
+		console.log(numKilledBac);
 		//Convert default canvas coords to webgl vector coords
 		x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
 		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
@@ -274,6 +275,29 @@ var main = function() {
 			tempY = randomSign(r)*Math.sin(rAngle);
 		}
 
+		if (i != 0) {
+			for (var j = 0; j < bacArr.length; j++) {
+
+				/*If the distance between the attempted spawn point and an already spawned
+					bacteria minus their two radii are less than zero, that means the two
+					bacteria would be colliding. So it will find another point where it will
+					not collide with any existing bacteria.
+				*/
+				if (getDistance(tempX, tempY, bacArr[j].x, bacArr[j].y) - (0.1+bacArr[j].r) < 0) {
+
+					rAngle = Math.random();
+					if (Math.random() >= 0.5) {
+						tempX = randomSign(r)*Math.sin(rAngle);
+						tempY = randomSign(r)*Math.cos(rAngle);
+					} else {
+						tempX = randomSign(r)*Math.cos(rAngle);
+						tempY = randomSign(r)*Math.sin(rAngle);
+					}
+					j = -1;
+				}
+			}
+		}
+
 		//Create and then push a Bacteria object into bacArr
 		bacArr.push(new Bacteria(tempX, tempY, 0.1, i));
 	}
@@ -289,7 +313,7 @@ var main = function() {
 		for (let i in bacArr) {
 			if (bacArr[i].alive) {
 				draw_circle(bacArr[i].x,bacArr[i].y,bacArr[i].r,'0.5, 0, 0, 0.5');
-			} else {
+			} else if ( numKilledBac < (winKillAmt-totBac)) {
 				bacArr[i].spawn();
 			}
 			if (score > 400) {
