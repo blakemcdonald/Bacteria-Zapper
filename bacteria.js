@@ -11,7 +11,7 @@ var main = function() {
 	var score = 0;
 	var numKilledBac = 0;
 	var missClicks = 0;
-	var winKillAmt = 20;
+	var winKillAmt = 200;
 
 	//Variables for calculating fps
 	var filterStrength = 20;
@@ -46,7 +46,6 @@ var main = function() {
 			vertices.push(y2);
 			vertices.push(0);
 		}
-		//If the distance of your click is less than or equal to the position
 
 		// Create an empty buffer object
 		var vertex_buffer = gl.createBuffer();
@@ -145,6 +144,48 @@ var main = function() {
 
 	}	// end function draw_circle
 
+	function colliding(x1,y1,r1,x2,y2,r2) {
+		var xDist = x2-x1;
+		var yDist = y2-y1;
+		var totDist = Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
+
+		if(totDist - (r1+r2) < 0) {
+			return true;
+		}
+
+		return false;
+	}
+
+	//Function for obtaining an array of [x,y] for points along the 'game- circle'
+	function randomCircPoints() {
+
+			//Set a random angle for the x and y to be calculated with sin and cos
+			var a = Math.random();
+			//Array to return
+			var retArr = [];
+
+			/*With a 50% chance to swap which axis calculates with which trig function,
+				it ensures that all possible points along the circumference of the 'game-
+				circle' have a chance of spawning a bacteria.
+
+				For some reason not all points of the circumference can be calculated
+				by always using sine for x and cosine for y. I'm not sure why it happens
+				like this, but for now this spaghetti will do.
+
+				The random sign infront of the "r" variable, corresponding to the radius
+				of the 'game-circle', furthers the posibility for bacteria to spawn in any
+				'quadrant' of the 'game-circle'
+			*/
+			if (Math.random() >= 0.5) {
+				retArr.push(randomSign(r)*Math.sin(a));
+				retArr.push(randomSign(r)*Math.cos(a));
+			} else {
+				retArr.push(randomSign(r)*Math.cos(a));
+				retArr.push(randomSign(r)*Math.sin(a));
+			}
+
+			return retArr;
+	}
 	//Assign function to mouse click
 	canvas.onmousedown = function(e, canvas){click(e, myCanvas);};
 
@@ -154,7 +195,7 @@ var main = function() {
 		var y = e.clientY;
 		var hit = false;
 		var rect = e.target.getBoundingClientRect();
-		console.log(numKilledBac);
+
 		//Convert default canvas coords to webgl vector coords
 		x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
 		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
@@ -162,11 +203,11 @@ var main = function() {
 		//Loop through all bacteria and check if you clicked within the radius of any
 		//Increase score and destroy the bacteria
 		for(let i in bacArr) {
-			if(getDistance(x, y, bacArr[i].x, bacArr[i].y) < bacArr[i].r) {
-			 numKilledBac++;
-			 score = Math.round(score + (1/bacArr[i].r));					//Awards a higher score for clicking the bacteria faster (the smaller the bacteria, the larger the score bonus)
-			 bacArr[i].destroy();
-			 hit = true;
+			if(colliding(x, y, 0, bacArr[i].x, bacArr[i].y, bacArr[i].r)){
+				numKilledBac++;
+ 			 	score = Math.round(score + (1/bacArr[i].r));					//Awards a higher score for clicking the bacteria faster (the smaller the bacteria, the larger the score bonus)
+ 			 	bacArr[i].destroy();
+ 			 	hit = true;
 			}
 		}
 
@@ -185,27 +226,10 @@ var main = function() {
 		return n;
 	}
 
-	//Gets Distance between click and circle
-	function getDistance(x1, y1, x2, y2) {
-		var xDist = x2-x1;
-		var yDist = y2-y1;
-
-		return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
-	}
-
 	//Class for storing data about each Bacteria
 	class Bacteria {
-		constructor(x,y,r,id) {
-			this.r = r;
-			this.x = x;
-			this.y = y;
+		constructor(id) {
 			this.id = id;
-			this.alive = true;
-		}
-
-		//Used to (re)set the size of the bacteria
-		setSize(r) {
-			this.r = r;
 		}
 
 		//Used to increase the size of the bacteria
@@ -215,24 +239,36 @@ var main = function() {
 
 		//Sets the alive variable to false to tell the program to not draw the circle
 		destroy() {
+			//Set radius to zero to open up more potential respawn points
+			this.r = 0;
 			this.alive = false;
 		}
 
 		//Resets the alive/radius variable to true/0.1 and generates a new point for the bacteria to spawn at
 		spawn() {
-			var newAngle = Math.random();
+			var tempXY = randomCircPoints();
+			var attempt = 0;
 
-			//Same idea from the for loop that creates the bacteria array
-			if (Math.random() >= 0.5) {
-				this.x = randomSign(r)*Math.sin(newAngle);
-				this.y = randomSign(r)*Math.cos(newAngle);
-			} else {
-				this.x = randomSign(r)*Math.cos(newAngle);
-				this.y = randomSign(r)*Math.sin(newAngle);
-			}
-			this.r = 0.1;
-			this.alive = true;
-		}
+				if(this.id != 0) {
+					for (var i = 0; i < bacArr.length; i++) {
+						//Error check to not break the game if the bacteria cover the whole game surface.
+						if(attempt > 500) {
+							console.log("No area for new bacteria to spawn");
+							break;
+						}
+
+						if (colliding(tempXY[0], tempXY[1], 0.1, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
+							tempXY = randomCircPoints();
+							attempt++;
+							i = -1;
+						}
+					}
+				}
+				this.x = tempXY[0];
+				this.y = tempXY[1];
+				this.r = 0.1;
+				this.alive = true;
+		 }
 	}
 
 	// Set radius and size for game-circle
@@ -246,60 +282,12 @@ var main = function() {
 	var totBac = 10;
 	var bacArr = [];
 	var rAngle = 0;
-	var tempX = 0;
-	var tempY = 0;
+	var tempXY = [];
 
-	//Create and push bacteria objects into an array
+	//Create and push new Bacteria objects into bacArr, then spawn each Bacteria
 	for(var i = 0; i<totBac; i++){
-
-		//Set a random angle for the x and y to be calculated with sin and cos
-		rAngle = Math.random();
-
-		/*With a 50% chance to swap which axis calculates with which trig function,
-			it ensures that all possible points along the circumference of the 'game-
-			circle' have a chance of spawning a bacteria.
-
-			For some reason not all points of the circumference can be calculated
-			by always using sine for x and cosine for y. I'm not sure why it happens
-			like this, but for now this spaghetti will do.
-
-			The random sign infront of the "r" variable, corresponding to the radius
-			of the 'game-circle', furthers the posibility for bacteria to spawn in any
-			'quadrant' of the 'game-circle'
-		*/
-		if (Math.random() >= 0.5) {
-			tempX = randomSign(r)*Math.sin(rAngle);
-			tempY = randomSign(r)*Math.cos(rAngle);
-		} else {
-			tempX = randomSign(r)*Math.cos(rAngle);
-			tempY = randomSign(r)*Math.sin(rAngle);
-		}
-
-		if (i != 0) {
-			for (var j = 0; j < bacArr.length; j++) {
-
-				/*If the distance between the attempted spawn point and an already spawned
-					bacteria minus their two radii are less than zero, that means the two
-					bacteria would be colliding. So it will find another point where it will
-					not collide with any existing bacteria.
-				*/
-				if (getDistance(tempX, tempY, bacArr[j].x, bacArr[j].y) - (0.1+bacArr[j].r) < 0) {
-
-					rAngle = Math.random();
-					if (Math.random() >= 0.5) {
-						tempX = randomSign(r)*Math.sin(rAngle);
-						tempY = randomSign(r)*Math.cos(rAngle);
-					} else {
-						tempX = randomSign(r)*Math.cos(rAngle);
-						tempY = randomSign(r)*Math.sin(rAngle);
-					}
-					j = -1;
-				}
-			}
-		}
-
-		//Create and then push a Bacteria object into bacArr
-		bacArr.push(new Bacteria(tempX, tempY, 0.1, i));
+		bacArr.push(new Bacteria(i));
+		bacArr[i].spawn();
 	}
 
 	var timer = setInterval(function(){
@@ -316,6 +304,7 @@ var main = function() {
 			} else if ( numKilledBac < (winKillAmt-totBac)) {
 				bacArr[i].spawn();
 			}
+
 			if (score > 400) {
 				bacArr[i].increaseSize(0.0005);
 			} else if (score > 1000) {
