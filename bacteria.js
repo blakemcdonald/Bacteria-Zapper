@@ -25,6 +25,10 @@ var main = function() {
 
 	var textCanvas = document.getElementById('text');
 	var ctx = textCanvas.getContext('2d')
+	ctx.font = "80px Verdana";
+	ctx.textAlign = "center";
+	//ctx.fillText("Hello", 200, 500);
+	//ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 	function draw_circle(x,y,r,color) {
 
@@ -354,6 +358,8 @@ var main = function() {
 					}
 				}
 		 	}
+		} else {
+			ctx.fillText("You win!", 300, 300);
 		}
 		//add an else here
 
