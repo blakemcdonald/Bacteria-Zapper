@@ -143,14 +143,16 @@ var main = function() {
 
 	}	// end function draw_circle
 
-	//
+	//Returns a random RGBA value
 	function randomColor() {
+		// times by 0.65 to ensure the bacteria isn't as light as the canvas
 		var r = (Math.random() * (0.65)).toFixed(2);
 		var g = (Math.random() * (0.65)).toFixed(2);
 		var b = (Math.random() * (0.65)).toFixed(2);
 
 		return [r,g,b,0.75];
 	}
+
 	function colliding(x1,y1,r1,x2,y2,r2) {
 		var xDist = x2-x1;
 		var yDist = y2-y1;
