@@ -9,9 +9,9 @@
 var main = function() {
 	//Game's main variables
 	var score = 0;
-	var numKilledBac = 0;
 	var missClicks = 0;
 	var winKillAmt = 15;
+	var bacRemaining = winKillAmt;
 	var lives = 2;
 
 
@@ -250,7 +250,7 @@ var main = function() {
 		//Sets the alive variable to false to tell the program to not draw the circle
 		destroy() {
 			//Set radius to zero to open up more potential respawn points
-			numKilledBac++;
+			bacRemaining--;
 			this.r = 0;
 			this.alive = false;
 		}
@@ -302,10 +302,14 @@ var main = function() {
 		bacArr[i].spawn();
 	}
 
+	function winCondition(){
+
+	}
+
 	var timer = setInterval(function(){
 		//Updates the score span element in the html
 		document.getElementById('scoreDisplay').innerHTML=score;
-		document.getElementById('bacNum').innerHTML=(winKillAmt-numKilledBac);
+		document.getElementById('bacNum').innerHTML=bacRemaining;
 		document.getElementById('lives').innerHTML=lives;
 		timer++;
 
@@ -319,7 +323,7 @@ var main = function() {
 					//If that was the last life, break out of this bacArr for loop and
 					//set Remaining bacteria to 0
 					if (lives <= 0) {
-						numKilledBac = winKillAmt;
+						bacRemaining = 0;
 						break;
 					}
 				}
@@ -328,7 +332,7 @@ var main = function() {
 				//Increase the size of each bacteria by 0.0005 each tick
 				if (bacArr[i].alive) {
 					draw_circle(bacArr[i].x,bacArr[i].y,bacArr[i].r,bacArr[i].color);
-				} else if ( numKilledBac <= (winKillAmt-totBac)) {
+				} else if ( bacRemaining >= totBac) {
 					bacArr[i].spawn();
 				}
 
@@ -344,11 +348,6 @@ var main = function() {
 				}
 			}
 	 	}
-		//else {
-		// 	lives = 0;
-		// 	numKilledBac = winKillAmt;
-		// }
-
 
 		// Draw the game surface circle
 		draw_circle(0,0,0.8,'0.05, 0.1, 0.05, 0.5');
