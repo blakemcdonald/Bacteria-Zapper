@@ -309,7 +309,7 @@ var main = function() {
 	var timer = setInterval(function(){
 		//Updates the score span element in the html
 		document.getElementById('scoreDisplay').innerHTML=score;
-		document.getElementById('bacNum').innerHTML=bacRemaining;
+		document.getElementById('bacRemaining').innerHTML=bacRemaining;
 		document.getElementById('lives').innerHTML=lives;
 		timer++;
 
