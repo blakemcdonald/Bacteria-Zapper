@@ -76,7 +76,6 @@ var main = function() {
 
 		// Compile the vertex shader
 		gl.compileShader(vertShader);
-
 		// Fragment shader source code
 		var fragCode =
 			'void main(void) {' +
@@ -144,6 +143,16 @@ var main = function() {
 
 	}	// end function draw_circle
 
+	//Returns a random RGBA value
+	function randomColor() {
+		// times by 0.65 to ensure the bacteria isn't as light as the canvas
+		var r = (Math.random() * (0.65)).toFixed(2);
+		var g = (Math.random() * (0.65)).toFixed(2);
+		var b = (Math.random() * (0.65)).toFixed(2);
+
+		return [r,g,b,0.75];
+	}
+
 	function colliding(x1,y1,r1,x2,y2,r2) {
 		var xDist = x2-x1;
 		var yDist = y2-y1;
@@ -198,7 +207,7 @@ var main = function() {
 
 		//Convert default canvas coords to webgl vector coords
 		x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2)
 
 		//Loop through all bacteria and check if you clicked within the radius of any
 		//Increase score and destroy the bacteria
@@ -267,6 +276,7 @@ var main = function() {
 				this.x = tempXY[0];
 				this.y = tempXY[1];
 				this.r = 0.1;
+				this.color = randomColor();
 				this.alive = true;
 		 }
 	}
@@ -300,7 +310,7 @@ var main = function() {
 		//Increase the size of each bacteria by 0.005 each tick
 		for (let i in bacArr) {
 			if (bacArr[i].alive) {
-				draw_circle(bacArr[i].x,bacArr[i].y,bacArr[i].r,'0.5, 0, 0, 0.5');
+				draw_circle(bacArr[i].x,bacArr[i].y,bacArr[i].r,bacArr[i].color);
 			} else if ( numKilledBac < (winKillAmt-totBac)) {
 				bacArr[i].spawn();
 			}
@@ -329,6 +339,7 @@ var main = function() {
 	//Displays the FPS to the fps span within the html
 	var fpsOut = document.getElementById("fps");
 	setInterval(function(){
+		//console.log();
 		fpsOut.innerHTML = (1000/frameTime).toFixed(1) + "fps";
 	},1000);
 
