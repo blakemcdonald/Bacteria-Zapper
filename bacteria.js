@@ -11,7 +11,9 @@ var main = function() {
 	var score = 0;
 	var numKilledBac = 0;
 	var missClicks = 0;
-	var winKillAmt = 200;
+	var winKillAmt = 15;
+	var lives = 2;
+
 
 	//Variables for calculating fps
 	var filterStrength = 20;
@@ -213,7 +215,6 @@ var main = function() {
 		//Increase score and destroy the bacteria
 		for(let i in bacArr) {
 			if(colliding(x, y, 0, bacArr[i].x, bacArr[i].y, bacArr[i].r)){
-				numKilledBac++;
  			 	score = Math.round(score + (1/bacArr[i].r));					//Awards a higher score for clicking the bacteria faster (the smaller the bacteria, the larger the score bonus)
  			 	bacArr[i].destroy();
  			 	hit = true;
@@ -249,6 +250,7 @@ var main = function() {
 		//Sets the alive variable to false to tell the program to not draw the circle
 		destroy() {
 			//Set radius to zero to open up more potential respawn points
+			numKilledBac++;
 			this.r = 0;
 			this.alive = false;
 		}
@@ -303,31 +305,53 @@ var main = function() {
 	var timer = setInterval(function(){
 		//Updates the score span element in the html
 		document.getElementById('scoreDisplay').innerHTML=score;
-
+		document.getElementById('bacNum').innerHTML=(winKillAmt-numKilledBac);
+		document.getElementById('lives').innerHTML=lives;
 		timer++;
 
-		//Loop through all bacteria objects, use their data to draw to canvas
-		//Increase the size of each bacteria by 0.005 each tick
-		for (let i in bacArr) {
-			if (bacArr[i].alive) {
-				draw_circle(bacArr[i].x,bacArr[i].y,bacArr[i].r,bacArr[i].color);
-			} else if ( numKilledBac < (winKillAmt-totBac)) {
-				bacArr[i].spawn();
-			}
 
-			if (score > 400) {
-				bacArr[i].increaseSize(0.0005);
-			} else if (score > 1000) {
-				bacArr[i].increaseSize(0.0008);
-			} else if (score > 2000) {
-				bacArr[i].increaseSize(0.0014);
-			} else {
-				bacArr[i].increaseSize(0.0003);
+		if(lives > 0) {
+
+			for (let i in bacArr) {
+				if(bacArr[i].r > 0.3) {
+					bacArr[i].destroy();
+					lives--;
+					//If that was the last life, break out of this bacArr for loop and
+					//set Remaining bacteria to 0
+					if (lives <= 0) {
+						numKilledBac = winKillAmt;
+						break;
+					}
+				}
+
+				//Loop through all bacteria objects, use their data to draw to canvas
+				//Increase the size of each bacteria by 0.0005 each tick
+				if (bacArr[i].alive) {
+					draw_circle(bacArr[i].x,bacArr[i].y,bacArr[i].r,bacArr[i].color);
+				} else if ( numKilledBac <= (winKillAmt-totBac)) {
+					bacArr[i].spawn();
+				}
+
+				//Bacteria grow faster when a certain score threshold is met
+				if (score > 400) {
+					bacArr[i].increaseSize(0.0005);
+				} else if (score > 1000) {
+					bacArr[i].increaseSize(0.0008);
+				} else if (score > 2000) {
+					bacArr[i].increaseSize(0.0014);
+				} else {
+					bacArr[i].increaseSize(0.0003);
+				}
 			}
-		}
+	 	}
+		//else {
+		// 	lives = 0;
+		// 	numKilledBac = winKillAmt;
+		// }
+
 
 		// Draw the game surface circle
-		draw_circle(0,0,0.8,'0.0, 0.5, 0.0, 0.5');
+		draw_circle(0,0,0.8,'0.05, 0.1, 0.05, 0.5');
 
 		//Information for FPS
 		var thisFrameTime = (thisLoop = new Date) - lastloop;
