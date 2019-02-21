@@ -6,15 +6,27 @@
     <head>
         <meta charset="utf-8" />
         <title> Bacteria Zapper</title>
+        <style>
+          .container {
+            position: relative;
+          }
+          #text {
+            position: absolute;
+            pointer-events: none;
+            left: 0px;
+            top: 0px
+            z-index: 10;
+          } p {color:blue;}
+        </style>
     </head>
 
     <body onload="main()">
-
-        <canvas id="gameSurface" width="600" height="600">
+        <div class="container">
+          <canvas id="gameSurface" width="600" height="600">
             use browser that supports canvas
-        </canvas>
-        <canvas id="text" width="300" height="300"></canvas>
-
+          </canvas>
+          <canvas id="text" width="600" height="600"></canvas>
+        </div>
         <script src="bacteria.js"> </script>
 
         <h1> Score: <span id="scoreDisplay"></span></h1>
