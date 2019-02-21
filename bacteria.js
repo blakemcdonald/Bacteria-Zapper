@@ -19,9 +19,12 @@ var main = function() {
 	var filterStrength = 20;
 	var frameTime = 0, lastloop = new Date, thisLoop;
 
-	/*======= Creating a canvas variable =========*/
-	var canvas = document.getElementById('myCanvas');
+	/*======= Creating canvas variables =========*/
+	var canvas = document.getElementById('gameSurface');
 	var gl = canvas.getContext('webgl');
+
+	var textCanvas = document.getElementById('text');
+	var ctx = textCanvas.getContext('2d')
 
 	function draw_circle(x,y,r,color) {
 
@@ -198,7 +201,7 @@ var main = function() {
 			return retArr;
 	}
 	//Assign function to mouse click
-	canvas.onmousedown = function(e, canvas){click(e, myCanvas);};
+	canvas.onmousedown = function(e, canvas){click(e, gameSurface);};
 
 	//Function click
 	function click(e, canvas) {
@@ -303,7 +306,10 @@ var main = function() {
 	}
 
 	function winCondition(){
-
+		 if(lives > 0 && bacRemaining <= 0) {
+		 	return true;
+		 }
+		return false;
 	}
 
 	var timer = setInterval(function(){
@@ -313,41 +319,43 @@ var main = function() {
 		document.getElementById('lives').innerHTML=lives;
 		timer++;
 
+		 if(!winCondition()){
+			if(lives > 0) {
 
-		if(lives > 0) {
+				for (let i in bacArr) {
+					if(bacArr[i].r > 0.3) {
+						bacArr[i].destroy();
+						lives--;
+						//If that was the last life, break out of this bacArr for loop and
+						//set Remaining bacteria to 0
+						if (lives <= 0) {
+							bacRemaining = 0;
+							break;
+						}
+					}
 
-			for (let i in bacArr) {
-				if(bacArr[i].r > 0.3) {
-					bacArr[i].destroy();
-					lives--;
-					//If that was the last life, break out of this bacArr for loop and
-					//set Remaining bacteria to 0
-					if (lives <= 0) {
-						bacRemaining = 0;
-						break;
+					//Loop through all bacteria objects, use their data to draw to canvas
+					//Increase the size of each bacteria by 0.0005 each tick
+					if (bacArr[i].alive) {
+						draw_circle(bacArr[i].x,bacArr[i].y,bacArr[i].r,bacArr[i].color);
+					} else if ( bacRemaining >= totBac) {
+						bacArr[i].spawn();
+					}
+
+					//Bacteria grow faster when a certain score threshold is met
+					if (score > 400) {
+						bacArr[i].increaseSize(0.0005);
+					} else if (score > 1000) {
+						bacArr[i].increaseSize(0.0008);
+					} else if (score > 2000) {
+						bacArr[i].increaseSize(0.0014);
+					} else {
+						bacArr[i].increaseSize(0.0003);
 					}
 				}
-
-				//Loop through all bacteria objects, use their data to draw to canvas
-				//Increase the size of each bacteria by 0.0005 each tick
-				if (bacArr[i].alive) {
-					draw_circle(bacArr[i].x,bacArr[i].y,bacArr[i].r,bacArr[i].color);
-				} else if ( bacRemaining >= totBac) {
-					bacArr[i].spawn();
-				}
-
-				//Bacteria grow faster when a certain score threshold is met
-				if (score > 400) {
-					bacArr[i].increaseSize(0.0005);
-				} else if (score > 1000) {
-					bacArr[i].increaseSize(0.0008);
-				} else if (score > 2000) {
-					bacArr[i].increaseSize(0.0014);
-				} else {
-					bacArr[i].increaseSize(0.0003);
-				}
-			}
-	 	}
+		 	}
+		}
+		//add an else here
 
 		// Draw the game surface circle
 		draw_circle(0,0,0.8,'0.05, 0.1, 0.05, 0.5');
