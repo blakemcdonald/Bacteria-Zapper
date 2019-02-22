@@ -222,6 +222,7 @@ var main = function() {
  			 	score = Math.round(score + (1/bacArr[i].r));					//Awards a higher score for clicking the bacteria faster (the smaller the bacteria, the larger the score bonus)
  			 	bacArr[i].destroy();
  			 	hit = true;
+				break;
 			}
 		}
 
