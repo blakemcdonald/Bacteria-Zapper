@@ -27,8 +27,6 @@ var main = function() {
 	var ctx = textCanvas.getContext('2d')
 	ctx.font = "80px Verdana";
 	ctx.textAlign = "center";
-	//ctx.fillText("Hello", 200, 500);
-	//ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 	function draw_circle(x,y,r,color) {
 
@@ -311,8 +309,19 @@ var main = function() {
 
 	function winCondition(){
 		 if(lives > 0 && bacRemaining <= 0) {
+			ctx.fillText("You win!", 300, 300);
 		 	return true;
 		 }
+		return false;
+	}
+
+	function loseCondition(){
+		if(lives<=0) {
+			ctx.fillText("Game over", 300, 300);
+			ctx.font = "40px Verdana";
+			ctx.fillText("You lose...", 310, 355);
+			return true;
+		}
 		return false;
 	}
 
@@ -332,7 +341,7 @@ var main = function() {
 						lives--;
 						//If that was the last life, break out of this bacArr for loop and
 						//set Remaining bacteria to 0
-						if (lives <= 0) {
+						if (loseCondition()) {
 							bacRemaining = 0;
 							break;
 						}
@@ -358,8 +367,6 @@ var main = function() {
 					}
 				}
 		 	}
-		} else {
-			ctx.fillText("You win!", 300, 300);
 		}
 		//add an else here
 
