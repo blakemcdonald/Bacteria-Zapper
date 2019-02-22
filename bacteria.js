@@ -220,7 +220,6 @@ var main = function() {
 		for(let i in bacArr) {
 			if(colliding(x, y, 0, bacArr[i].x, bacArr[i].y, bacArr[i].r)){
  			 	score = Math.round(score + (1/bacArr[i].r));					//Awards a higher score for clicking the bacteria faster (the smaller the bacteria, the larger the score bonus)
-				console.log(bacArr[i].id);
 				bacArr[i].destroy(i);
  			 	hit = true;
 				//Break ensures you can't click multiple bacteria at once
