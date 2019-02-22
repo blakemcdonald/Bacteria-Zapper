@@ -173,7 +173,7 @@ var main = function() {
 	}
 
 	//Function for obtaining an array of [x,y] for points along the 'game- circle'
-	function getCircPoints(spawnRad, trig, angle) {
+	function getCircPoints(spawnRadX, spawnRadY, trig, angle) {
 			//Set a random angle for the x and y to be calculated with sin and cos
 			//var a = Math.random();
 			//Array to return
@@ -192,11 +192,11 @@ var main = function() {
 				'quadrant' of the 'game-circle'
 			*/
 			if (trig == "sin") {
-				retArr.push(spawnRad*Math.sin(angle));
-				retArr.push(spawnRad*Math.cos(angle));
+				retArr.push(spawnRadX*Math.sin(angle));
+				retArr.push(spawnRadY*Math.cos(angle));
 			} else {
-				retArr.push(spawnRad*Math.cos(angle));
-				retArr.push(spawnRad*Math.sin(angle));
+				retArr.push(spawnRadX*Math.cos(angle));
+				retArr.push(spawnRadY*Math.sin(angle));
 			}
 
 			return retArr;
@@ -220,8 +220,10 @@ var main = function() {
 		for(let i in bacArr) {
 			if(colliding(x, y, 0, bacArr[i].x, bacArr[i].y, bacArr[i].r)){
  			 	score = Math.round(score + (1/bacArr[i].r));					//Awards a higher score for clicking the bacteria faster (the smaller the bacteria, the larger the score bonus)
- 			 	bacArr[i].destroy();
+				console.log(bacArr[i].id);
+				bacArr[i].destroy(i);
  			 	hit = true;
+				//Break ensures you can't click multiple bacteria at once
 				break;
 			}
 		}
@@ -248,50 +250,56 @@ var main = function() {
 		}
 
 		//Sets the alive variable to false to tell the program to not draw the circle
-		destroy() {
+		destroy(index) {
 			//Set radius to zero to open up more potential respawn points
 			this.r = 0;
 			this.x = 0;
 			this.y = 0;
 			this.alive = false;
 			bacRemaining--;
+			bacArr.splice(index,1);
+			if(bacRemaining >= totBac) {
+				bacArr.push(new Bacteria(winKillAmt-bacRemaining + totBac - 1));
+				bacArr[totBac-1].spawn();
+			}
 		}
 		//Used to draw the bacteria to the screen and also update any Information
 		update() {
 			/*This code moves the bacteria around the circle
 			this.angle += 0.006;
-			var tempXY = getCircPoints(this.spawnRad, this.trig, this.angle);
+			var tempXY = getCircPoints(this.spawnRadX, this.spawnRadY, this.trig, this.angle);
 			this.x = tempXY[0];
 			this.y = tempXY[1];
 			this.r = 0.06;*/
-
-			//If a certain threshold (r=0.3) destroy the bacteria and decrease player's lives
-			if(this.r > 0.3) {
-				lives--;
-				this.destroy();
-			} else {
-
-				//Increase the size of each bacteria by 0.0003 each tick
-				//Bacteria grow faster when a certain score threshold is met
-				if (score > 400) {
-					this.r += 0.0005;
-				} else if (score > 1000) {
-					this.r += 0.0008;
-				} else if (score > 2000) {
-					this.r += 0.0014;
+			if(this.alive) {
+				//If a certain threshold (r=0.3) destroy the bacteria and decrease player's lives
+				if(this.r > 0.3) {
+					lives--;
+					this.destroy();
 				} else {
-					this.r += 0.0003;
+
+					//Increase the size of each bacteria by 0.0003 each tick
+					//Bacteria grow faster when a certain score threshold is met
+					if (score > 400) {
+						this.r += 0.0005;
+					} else if (score > 1000) {
+						this.r += 0.0008;
+					} else if (score > 2000) {
+						this.r += 0.0014;
+					} else {
+						this.r += 0.0003;
+					}
+
+					draw_circle(this.x, this.y, this.r, this.color);
 				}
-
-				draw_circle(this.x, this.y, this.r, this.color);
 			}
-
 		}
 
 		getNewRandomTrigData() {
 			//Get random values for variables determining x and y coordinates
 			this.angle = Math.random();
-			this.spawnRad = randomSign(0.8);
+			this.spawnRadX = randomSign(0.8);
+			this.spawnRadY = randomSign(0.8);
 			if(Math.random() >= 0.5) {
 				this.trig = "sin";
 			} else {
@@ -304,7 +312,7 @@ var main = function() {
 			//get new random data for determining x and y
 			this.getNewRandomTrigData();
 			//Get a [x,y] array of coordinates
-			var tempXY = getCircPoints(this.spawnRad, this.trig, this.angle);
+			var tempXY = getCircPoints(this.spawnRadX, this.spawnRadY, this.trig, this.angle);
 			//Variable to ensure no infinite loop is created
 			var attempt = 0;
 			//Loop through all Bacteria to ensure no collision on spawn
@@ -319,7 +327,7 @@ var main = function() {
 				//Also need to set i = -1 to ensure it loops through all bacteria again
 				if (colliding(tempXY[0], tempXY[1], 0.06, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
 					this.getNewRandomTrigData();
-					tempXY = getCircPoints(this.spawnRad, this.trig, this.angle);
+					tempXY = getCircPoints(this.spawnRadX, this.spawnRadY, this.trig, this.angle);
 					attempt++;
 					i = -1;
 				}
@@ -378,22 +386,16 @@ var main = function() {
 		document.getElementById('lives').innerHTML=lives;
 		timer++;
 
-		if(!winCondition() && lives > 0){
+		if(!winCondition() && lives > 0) {
 			for (let i in bacArr) {
-				if (bacArr[i].alive) {
 					bacArr[i].update();
 
 					if (loseCondition()) {
 						bacRemaining = 0;
 						break;
 					}
-				/*If the number of bacteria remaining is greater than the amount of total bacterial
-					spawned at one time, the program needs to respawn any destroyed bacteria*/
-				} else if (bacRemaining >= totBac) {
-					bacArr[i].spawn();
 				}
 			}
-		}
 
 		// Draw the game surface circle
 		draw_circle(0,0,0.8,'0.05, 0.1, 0.05, 0.5');
