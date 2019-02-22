@@ -260,7 +260,7 @@ var main = function() {
 			this.alive = false;
 		}
 
-		//Resets the alive/radius variable to true/0.1 and generates a new point for the bacteria to spawn at
+		//Resets the alive/radius variable to true/0.06 and generates a new point for the bacteria to spawn at
 		spawn() {
 			var tempXY = randomCircPoints();
 			var attempt = 0;
@@ -273,7 +273,7 @@ var main = function() {
 							break;
 						}
 
-						if (colliding(tempXY[0], tempXY[1], 0.1, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
+						if (colliding(tempXY[0], tempXY[1], 0.06, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
 							tempXY = randomCircPoints();
 							attempt++;
 							i = -1;
@@ -282,7 +282,7 @@ var main = function() {
 				}
 				this.x = tempXY[0];
 				this.y = tempXY[1];
-				this.r = 0.1;
+				this.r = 0.06;
 				this.color = randomColor();
 				this.alive = true;
 		 }
@@ -293,7 +293,7 @@ var main = function() {
 	var i=0.5;
 
 	//Radius for bacteria
-	var size=0.1;
+	var size=0.06;
 
 	//Variables for Bacteria data
 	var totBac = 10;
