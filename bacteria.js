@@ -173,10 +173,9 @@ var main = function() {
 	}
 
 	//Function for obtaining an array of [x,y] for points along the 'game- circle'
-	function randomCircPoints() {
-
+	function getCircPoints(spawnRad, trig, angle) {
 			//Set a random angle for the x and y to be calculated with sin and cos
-			var a = Math.random();
+			//var a = Math.random();
 			//Array to return
 			var retArr = [];
 
@@ -192,12 +191,12 @@ var main = function() {
 				of the 'game-circle', furthers the posibility for bacteria to spawn in any
 				'quadrant' of the 'game-circle'
 			*/
-			if (Math.random() >= 0.5) {
-				retArr.push(randomSign(r)*Math.sin(a));
-				retArr.push(randomSign(r)*Math.cos(a));
+			if (trig == "sin") {
+				retArr.push(spawnRad*Math.sin(angle));
+				retArr.push(spawnRad*Math.cos(angle));
 			} else {
-				retArr.push(randomSign(r)*Math.cos(a));
-				retArr.push(randomSign(r)*Math.sin(a));
+				retArr.push(spawnRad*Math.cos(angle));
+				retArr.push(spawnRad*Math.sin(angle));
 			}
 
 			return retArr;
@@ -247,45 +246,91 @@ var main = function() {
 			this.id = id;
 		}
 
-		//Used to increase the size of the bacteria
-		increaseSize(r) {
-			this.r += r;
-		}
-
 		//Sets the alive variable to false to tell the program to not draw the circle
 		destroy() {
 			//Set radius to zero to open up more potential respawn points
-			bacRemaining--;
 			this.r = 0;
+			this.x = 0;
+			this.y = 0;
 			this.alive = false;
+			bacRemaining--;
+		}
+		//Used to draw the bacteria to the screen and also update any Information
+		update() {
+			/*This code moves the bacteria around the circle
+			this.angle += 0.006;
+			var tempXY = getCircPoints(this.spawnRad, this.trig, this.angle);
+			this.x = tempXY[0];
+			this.y = tempXY[1];
+			this.r = 0.06;*/
+
+			//If a certain threshold (r=0.3) destroy the bacteria and decrease player's lives
+			if(this.r > 0.3) {
+				lives--;
+				this.destroy();
+			} else {
+
+				//Increase the size of each bacteria by 0.0003 each tick
+				//Bacteria grow faster when a certain score threshold is met
+				if (score > 400) {
+					this.r += 0.0005;
+				} else if (score > 1000) {
+					this.r += 0.0008;
+				} else if (score > 2000) {
+					this.r += 0.0014;
+				} else {
+					this.r += 0.0003;
+				}
+
+				draw_circle(this.x, this.y, this.r, this.color);
+			}
+
+		}
+
+		getNewRandomTrigData() {
+			//Get random values for variables determining x and y coordinates
+			this.angle = Math.random();
+			this.spawnRad = randomSign(0.8);
+			if(Math.random() >= 0.5) {
+				this.trig = "sin";
+			} else {
+				this.trig = "cos";
+			}
 		}
 
 		//Resets the alive/radius variable to true/0.06 and generates a new point for the bacteria to spawn at
 		spawn() {
-			var tempXY = randomCircPoints();
+			//get new random data for determining x and y
+			this.getNewRandomTrigData();
+			//Get a [x,y] array of coordinates
+			var tempXY = getCircPoints(this.spawnRad, this.trig, this.angle);
+			//Variable to ensure no infinite loop is created
 			var attempt = 0;
-
-				if(this.id != 0) {
-					for (var i = 0; i < bacArr.length; i++) {
-						//Error check to not break the game if the bacteria cover the whole game surface.
-						if(attempt > 500) {
-							console.log("No area for new bacteria to spawn");
-							break;
-						}
-
-						if (colliding(tempXY[0], tempXY[1], 0.06, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
-							tempXY = randomCircPoints();
-							attempt++;
-							i = -1;
-						}
-					}
+			//Loop through all Bacteria to ensure no collision on spawn
+			for (var i = 0; i < bacArr.length; i++) {
+				//Error check to not break the game if the bacteria cover the whole game surface.
+				if(attempt > 500) {
+					console.log("No area for new bacteria to spawn");
+					break;
 				}
-				this.x = tempXY[0];
-				this.y = tempXY[1];
-				this.r = 0.06;
-				this.color = randomColor();
-				this.alive = true;
-		 }
+
+				//If theres a collision with a specific object, the variables need to be randomized again
+				//Also need to set i = -1 to ensure it loops through all bacteria again
+				if (colliding(tempXY[0], tempXY[1], 0.06, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
+					this.getNewRandomTrigData();
+					tempXY = getCircPoints(this.spawnRad, this.trig, this.angle);
+					attempt++;
+					i = -1;
+				}
+			}
+
+			//Store new data for each Bacteria
+			this.x = tempXY[0];
+			this.y = tempXY[1];
+			this.r = 0.06;
+			this.color = randomColor();
+			this.alive = true;
+		}
 	}
 
 	// Set radius and size for game-circle
@@ -332,43 +377,22 @@ var main = function() {
 		document.getElementById('lives').innerHTML=lives;
 		timer++;
 
-		 if(!winCondition()){
-			if(lives > 0) {
+		if(!winCondition() && lives > 0){
+			for (let i in bacArr) {
+				if (bacArr[i].alive) {
+					bacArr[i].update();
 
-				for (let i in bacArr) {
-					if(bacArr[i].r > 0.3) {
-						bacArr[i].destroy();
-						lives--;
-						//If that was the last life, break out of this bacArr for loop and
-						//set Remaining bacteria to 0
-						if (loseCondition()) {
-							bacRemaining = 0;
-							break;
-						}
+					if (loseCondition()) {
+						bacRemaining = 0;
+						break;
 					}
-
-					//Loop through all bacteria objects, use their data to draw to canvas
-					//Increase the size of each bacteria by 0.0005 each tick
-					if (bacArr[i].alive) {
-						draw_circle(bacArr[i].x,bacArr[i].y,bacArr[i].r,bacArr[i].color);
-					} else if ( bacRemaining >= totBac) {
-						bacArr[i].spawn();
-					}
-
-					//Bacteria grow faster when a certain score threshold is met
-					if (score > 400) {
-						bacArr[i].increaseSize(0.0005);
-					} else if (score > 1000) {
-						bacArr[i].increaseSize(0.0008);
-					} else if (score > 2000) {
-						bacArr[i].increaseSize(0.0014);
-					} else {
-						bacArr[i].increaseSize(0.0003);
-					}
+				/*If the number of bacteria remaining is greater than the amount of total bacterial
+					spawned at one time, the program needs to respawn any destroyed bacteria*/
+				} else if (bacRemaining >= totBac) {
+					bacArr[i].spawn();
 				}
-		 	}
+			}
 		}
-		//add an else here
 
 		// Draw the game surface circle
 		draw_circle(0,0,0.8,'0.05, 0.1, 0.05, 0.5');
@@ -378,13 +402,12 @@ var main = function() {
 		frameTime += (thisFrameTime - frameTime) / filterStrength;
 		lastloop = thisLoop;
 
-	} ,	1000/60);
+	}, 1000/60);
 
 	//Displays the FPS to the fps span within the html
 	var fpsOut = document.getElementById("fps");
 	setInterval(function(){
-		//console.log();
 		fpsOut.innerHTML = (1000/frameTime).toFixed(1) + "fps";
-	},1000);
+	}, 1000);
 
 }
