@@ -13,7 +13,7 @@ var main = function() {
 	var winKillAmt = 15;
 	var bacRemaining = winKillAmt;
 	var lives = 2;
-
+	var spawnedBac = 0;
 
 	//Variables for calculating fps
 	var filterStrength = 20;
@@ -172,6 +172,12 @@ var main = function() {
 		return false;
 	}
 
+	function distance(x1, y1, x2, y2) {
+		var xDist = x2-x1;
+		var yDist = y2-y1;
+		return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
+	}
+
 	//Function for obtaining an array of [x,y] for points along the 'game- circle'
 	function getCircPoints(spawnRadX, spawnRadY, trig, angle) {
 			//Set a random angle for the x and y to be calculated with sin and cos
@@ -210,10 +216,9 @@ var main = function() {
 		var y = e.clientY;
 		var hit = false;
 		var rect = e.target.getBoundingClientRect();
-
 		//Convert default canvas coords to webgl vector coords
 		x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2)
+		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
 
 		//Loop through all bacteria and check if you clicked within the radius of any
 		//Increase score and destroy the bacteria
@@ -242,26 +247,55 @@ var main = function() {
 		return n;
 	}
 
+	function arrayRemove(a, value) {
+		return a.filter(function(ele){
+			return ele != value;
+		});
+	}
+
 	//Class for storing data about each Bacteria
 	class Bacteria {
 		constructor(id) {
 			this.id = id;
+			this.consuming = [];
 		}
 
 		//Sets the alive variable to false to tell the program to not draw the circle
 		destroy(index) {
 			//Set radius to zero to open up more potential respawn points
+			console.log(this.id);
+			console.log(this.consuming);
 			this.r = 0;
 			this.x = 0;
 			this.y = 0;
 			this.alive = false;
 			bacRemaining--;
+
+			//Destroy any other bacteria being consumed
+			for(i in this.consuming) {
+				this.consuming[i].destroy(bacArr.indexOf(this.consuming[i]));
+			}
+
+			//Remove destroyed bacteria from any other Bacteria.consuming arrays
+			for(i in bacArr) {
+				if(bacArr[i].consuming.indexOf(this) != -1) {
+					bacArr[i].consuming.splice(bacArr[i].consuming.indexOf(this), 1);
+				}
+			}
+
+			//Reset array for this bacteria
+			this.consuming = [];
+
+			//Remove destroyed bacteria from the bacteria array in order to spawn new ones
 			bacArr.splice(index,1);
+
+			//Spawn new bacteria
 			if(bacRemaining >= totBac) {
-				bacArr.push(new Bacteria(winKillAmt-bacRemaining + totBac - 1));
+				bacArr.push(new Bacteria(spawnedBac));
 				bacArr[totBac-1].spawn();
 			}
 		}
+
 		//Used to draw the bacteria to the screen and also update any Information
 		update() {
 			/*This code moves the bacteria around the circle
@@ -274,7 +308,7 @@ var main = function() {
 				//If a certain threshold (r=0.3) destroy the bacteria and decrease player's lives
 				if(this.r > 0.3) {
 					lives--;
-					this.destroy();
+					this.destroy(bacArr.indexOf(this));
 				} else {
 
 					//Increase the size of each bacteria by 0.0003 each tick
@@ -288,14 +322,44 @@ var main = function() {
 					} else {
 						this.r += 0.0003;
 					}
-
-					draw_circle(this.x, this.y, this.r, this.color);
+					/*Collision Check with consuming assigning,
+						finds which bacteria are colliding and sets the larger one to consume the other */
+					for(i in bacArr) {
+						if(this != bacArr[i]){
+							if(this.consuming.indexOf(bacArr[i]) == -1 && bacArr[i].consuming.indexOf(this) == -1) {
+								if(colliding(this.x, this.y, this.r, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
+									if(this.id < bacArr[i].id){
+										this.consuming.push(bacArr[i]);
+									}
+								}
+							} else {
+								for(i in this.consuming){
+									if(distance(this.x, this.y, this.consuming[i].x, this.consuming[i].y) <= (this.r - this.consuming[i].r)){
+										this.consuming[i].destroy(bacArr.indexOf(this.consuming[i]));
+									} else {
+										var xDiff = this.x - this.consuming[i].x;
+										var yDiff = this.y - this.consuming[i].y;
+										this.consuming[i].x += xDiff/60;
+										this.consuming[i].y += yDiff/60;
+										this.consuming[i].r -= 0.003;
+										this.r += 0.001;
+									}
+								}
+							}
+						}
+					}
 				}
+
+					//Draw
+					//Converts wegbl coords to canvas coords
+					// var tx = (this.x + 8/300 + 1) * 300;
+					// var ty = -1 * (this.y-1) * 300 - 8;
+					draw_circle(this.x, this.y, this.r, this.color);
 			}
 		}
-
+		
+		//Get random values for variables determining x and y coordinates
 		getNewRandomTrigData() {
-			//Get random values for variables determining x and y coordinates
 			this.angle = Math.random();
 			this.spawnRadX = randomSign(0.8);
 			this.spawnRadY = randomSign(0.8);
@@ -338,6 +402,9 @@ var main = function() {
 			this.r = 0.06;
 			this.color = randomColor();
 			this.alive = true;
+			this.consuming = [];
+			spawnedBac++;
+			//console.log(this);
 		}
 	}
 
@@ -356,7 +423,7 @@ var main = function() {
 
 	//Create and push new Bacteria objects into bacArr, then spawn each Bacteria
 	for(var i = 0; i<totBac; i++){
-		bacArr.push(new Bacteria(i));
+		bacArr.push(new Bacteria(spawnedBac));
 		bacArr[i].spawn();
 	}
 
@@ -410,6 +477,7 @@ var main = function() {
 	var fpsOut = document.getElementById("fps");
 	setInterval(function(){
 		fpsOut.innerHTML = (1000/frameTime).toFixed(1) + "fps";
+		//console.log(bacArr);
 	}, 1000);
 
 }
