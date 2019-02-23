@@ -247,6 +247,7 @@ var main = function() {
 	class Bacteria {
 		constructor(id) {
 			this.id = id;
+			this.consuming = [];
 		}
 
 		//Sets the alive variable to false to tell the program to not draw the circle
@@ -289,7 +290,24 @@ var main = function() {
 					} else {
 						this.r += 0.0003;
 					}
+					//Collision Check with consuming assigning
+					for(i in bacArr) {
+						if(this != bacArr[i]){
+							if(this.consuming.filter(function(x){return x.id==bacArr[i].id}).length == 0 && bacArr[i].consuming.filter(function(y){return y.id==this.id}).length == 0) {
+								if(colliding(this.x, this.y, this.r, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
+									console.log(bacArr[i].id);
+									if(this.id < bacArr[i].id){
+										this.consuming.push(bacArr[i]);
+									} else {
+										bacArr[i].consuming.push(this);
+									}
+								}
+							}
+						}
 
+					}
+
+					//Draw
 					draw_circle(this.x, this.y, this.r, this.color);
 				}
 			}
@@ -411,6 +429,7 @@ var main = function() {
 	var fpsOut = document.getElementById("fps");
 	setInterval(function(){
 		fpsOut.innerHTML = (1000/frameTime).toFixed(1) + "fps";
+		console.log(bacArr[0].consuming);
 	}, 1000);
 
 }
