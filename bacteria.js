@@ -270,23 +270,32 @@ var main = function() {
 			this.y = 0;
 			this.alive = false;
 			bacRemaining--;
+
+			//Destroy any other bacteria being consumed
 			for(i in this.consuming) {
-				//console.log(this.consuming[i]);
 				this.consuming[i].destroy(bacArr.indexOf(this.consuming[i]));
 			}
+
+			//Remove destroyed bacteria from any other Bacteria.consuming arrays
 			for(i in bacArr) {
 				if(bacArr[i].consuming.indexOf(this) != -1) {
 					bacArr[i].consuming.splice(bacArr[i].consuming.indexOf(this), 1);
 				}
 			}
 
+			//Reset array for this bacteria
 			this.consuming = [];
+
+			//Remove destroyed bacteria from the bacteria array in order to spawn new ones
 			bacArr.splice(index,1);
+
+			//Spawn new bacteria
 			if(bacRemaining >= totBac) {
 				bacArr.push(new Bacteria(spawnedBac));
 				bacArr[totBac-1].spawn();
 			}
 		}
+
 		//Used to draw the bacteria to the screen and also update any Information
 		update() {
 			/*This code moves the bacteria around the circle
@@ -313,7 +322,8 @@ var main = function() {
 					} else {
 						this.r += 0.0003;
 					}
-					//Collision Check with consuming assigning
+					/*Collision Check with consuming assigning,
+						finds which bacteria are colliding and sets the larger one to consume the other */
 					for(i in bacArr) {
 						if(this != bacArr[i]){
 							if(this.consuming.indexOf(bacArr[i]) == -1 && bacArr[i].consuming.indexOf(this) == -1) {
@@ -323,9 +333,7 @@ var main = function() {
 									}
 								}
 							} else {
-
 								for(i in this.consuming){
-
 									if(distance(this.x, this.y, this.consuming[i].x, this.consuming[i].y) <= (this.r - this.consuming[i].r)){
 										this.consuming[i].destroy(bacArr.indexOf(this.consuming[i]));
 									} else {
@@ -335,15 +343,12 @@ var main = function() {
 										this.consuming[i].y += yDiff/60;
 										this.consuming[i].r -= 0.003;
 										this.r += 0.001;
-
 									}
-								}
-									//Move the consuming bacteria into the consumer
 								}
 							}
 						}
-
 					}
+				}
 
 					//Draw
 					//Converts wegbl coords to canvas coords
@@ -352,9 +357,9 @@ var main = function() {
 					draw_circle(this.x, this.y, this.r, this.color);
 			}
 		}
-
+		
+		//Get random values for variables determining x and y coordinates
 		getNewRandomTrigData() {
-			//Get random values for variables determining x and y coordinates
 			this.angle = Math.random();
 			this.spawnRadX = randomSign(0.8);
 			this.spawnRadY = randomSign(0.8);
