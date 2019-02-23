@@ -25,7 +25,7 @@ var main = function() {
 
 	var textCanvas = document.getElementById('text');
 	var ctx = textCanvas.getContext('2d')
-	ctx.font = "80px Verdana";
+	ctx.font = "20px Verdana";
 	ctx.textAlign = "center";
 
 	function draw_circle(x,y,r,color) {
@@ -210,10 +210,9 @@ var main = function() {
 		var y = e.clientY;
 		var hit = false;
 		var rect = e.target.getBoundingClientRect();
-
 		//Convert default canvas coords to webgl vector coords
 		x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
-		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2)
+		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
 
 		//Loop through all bacteria and check if you clicked within the radius of any
 		//Increase score and destroy the bacteria
@@ -258,6 +257,7 @@ var main = function() {
 			this.y = 0;
 			this.alive = false;
 			bacRemaining--;
+			this.consuming = [];
 			bacArr.splice(index,1);
 			if(bacRemaining >= totBac) {
 				bacArr.push(new Bacteria(winKillAmt-bacRemaining + totBac - 1));
@@ -293,7 +293,7 @@ var main = function() {
 					//Collision Check with consuming assigning
 					for(i in bacArr) {
 						if(this != bacArr[i]){
-							if(this.consuming.filter(function(x){return x.id==bacArr[i].id}).length == 0 && bacArr[i].consuming.filter(function(y){return y.id==this.id}).length == 0) {
+							if(this.consuming.indexOf(bacArr[i]) == -1 && bacArr[i].consuming.indexOf(this) == -1) {
 								if(colliding(this.x, this.y, this.r, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
 									console.log(bacArr[i].id);
 									if(this.id < bacArr[i].id){
@@ -308,6 +308,10 @@ var main = function() {
 					}
 
 					//Draw
+					//Converts wegbl coords to canvas coords
+					 var tx = (this.x + 8/300 + 1) * 300;
+					 var ty = -1 * (this.y-1) * 300 - 8;
+					 ctx.fillText("" + this.id, tx, ty);
 					draw_circle(this.x, this.y, this.r, this.color);
 				}
 			}
