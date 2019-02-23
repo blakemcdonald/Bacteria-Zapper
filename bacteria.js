@@ -25,7 +25,7 @@ var main = function() {
 
 	var textCanvas = document.getElementById('text');
 	var ctx = textCanvas.getContext('2d')
-	ctx.font = "20px Verdana";
+	ctx.font = "80px Verdana";
 	ctx.textAlign = "center";
 
 	function draw_circle(x,y,r,color) {
@@ -264,6 +264,7 @@ var main = function() {
 		destroy(index) {
 			//Set radius to zero to open up more potential respawn points
 			console.log(this.id);
+			console.log(this.consuming);
 			this.r = 0;
 			this.x = 0;
 			this.y = 0;
@@ -279,16 +280,6 @@ var main = function() {
 				}
 			}
 
-			// for(i in bacArr){
-			// 	if(bacArr[i].consuming.indexOf(this) != -1) {
-			// 		bacArr[i].consuming.splice(bacArr[i].consuming.indexOf(this), 1);
-			// 	}
-			// }
-			// if(this.consuming.length != 0) {
-			// 	for(i in this.consuming){
-			// 		this.consuming[i].destroy();
-			// 	}
-			// }
 			this.consuming = [];
 			bacArr.splice(index,1);
 			if(bacRemaining >= totBac) {
@@ -308,7 +299,7 @@ var main = function() {
 				//If a certain threshold (r=0.3) destroy the bacteria and decrease player's lives
 				if(this.r > 0.3) {
 					lives--;
-					this.destroy();
+					this.destroy(bacArr.indexOf(this));
 				} else {
 
 					//Increase the size of each bacteria by 0.0003 each tick
@@ -333,19 +324,20 @@ var main = function() {
 								}
 							} else {
 
-								// for(i in this.consuming){
-								//
-								// 	if(distance(this.x, this.y, this.consuming[i].x, this.consuming[i].y) <= (this.r - this.consuming[i].r)){
-								//
-								// 	} else {
-								// 		var xDiff = this.x - this.consuming[i].x;
-								// 		var yDiff = this.y - this.consuming[i].y;
-								// 		this.consuming[i].x += xDiff/60;
-								// 		this.consuming[i].y += yDiff/60;
-								// 		this.consuming[i].r -= 0.003;
-								// 		this.r += 0.001;
-								// 	}
+								for(i in this.consuming){
 
+									if(distance(this.x, this.y, this.consuming[i].x, this.consuming[i].y) <= (this.r - this.consuming[i].r)){
+										this.consuming[i].destroy(bacArr.indexOf(this.consuming[i]));
+									} else {
+										var xDiff = this.x - this.consuming[i].x;
+										var yDiff = this.y - this.consuming[i].y;
+										this.consuming[i].x += xDiff/60;
+										this.consuming[i].y += yDiff/60;
+										this.consuming[i].r -= 0.003;
+										this.r += 0.001;
+
+									}
+								}
 									//Move the consuming bacteria into the consumer
 								}
 							}
@@ -355,9 +347,8 @@ var main = function() {
 
 					//Draw
 					//Converts wegbl coords to canvas coords
-					 var tx = (this.x + 8/300 + 1) * 300;
-					 var ty = -1 * (this.y-1) * 300 - 8;
-					 ctx.fillText("" + this.id, tx, ty);
+					// var tx = (this.x + 8/300 + 1) * 300;
+					// var ty = -1 * (this.y-1) * 300 - 8;
 					draw_circle(this.x, this.y, this.r, this.color);
 			}
 		}
