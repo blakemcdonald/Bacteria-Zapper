@@ -13,7 +13,7 @@ var main = function() {
 	var winKillAmt = 15;
 	var bacRemaining = winKillAmt;
 	var lives = 2;
-
+	var spawnedBac = 0;
 
 	//Variables for calculating fps
 	var filterStrength = 20;
@@ -172,6 +172,12 @@ var main = function() {
 		return false;
 	}
 
+	function distance(x1, y1, x2, y2) {
+		var xDist = x2-x1;
+		var yDist = y2-y1;
+		return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
+	}
+
 	//Function for obtaining an array of [x,y] for points along the 'game- circle'
 	function getCircPoints(spawnRadX, spawnRadY, trig, angle) {
 			//Set a random angle for the x and y to be calculated with sin and cos
@@ -219,7 +225,6 @@ var main = function() {
 		for(let i in bacArr) {
 			if(colliding(x, y, 0, bacArr[i].x, bacArr[i].y, bacArr[i].r)){
  			 	score = Math.round(score + (1/bacArr[i].r));					//Awards a higher score for clicking the bacteria faster (the smaller the bacteria, the larger the score bonus)
-				console.log(bacArr[i].id);
 				bacArr[i].destroy(i);
  			 	hit = true;
 				//Break ensures you can't click multiple bacteria at once
@@ -242,6 +247,12 @@ var main = function() {
 		return n;
 	}
 
+	function arrayRemove(a, value) {
+		return a.filter(function(ele){
+			return ele != value;
+		});
+	}
+
 	//Class for storing data about each Bacteria
 	class Bacteria {
 		constructor(id) {
@@ -252,15 +263,36 @@ var main = function() {
 		//Sets the alive variable to false to tell the program to not draw the circle
 		destroy(index) {
 			//Set radius to zero to open up more potential respawn points
+			console.log(this.id);
 			this.r = 0;
 			this.x = 0;
 			this.y = 0;
 			this.alive = false;
 			bacRemaining--;
+			for(i in this.consuming) {
+				//console.log(this.consuming[i]);
+				this.consuming[i].destroy(bacArr.indexOf(this.consuming[i]));
+			}
+			for(i in bacArr) {
+				if(bacArr[i].consuming.indexOf(this) != -1) {
+					bacArr[i].consuming.splice(bacArr[i].consuming.indexOf(this), 1);
+				}
+			}
+
+			// for(i in bacArr){
+			// 	if(bacArr[i].consuming.indexOf(this) != -1) {
+			// 		bacArr[i].consuming.splice(bacArr[i].consuming.indexOf(this), 1);
+			// 	}
+			// }
+			// if(this.consuming.length != 0) {
+			// 	for(i in this.consuming){
+			// 		this.consuming[i].destroy();
+			// 	}
+			// }
 			this.consuming = [];
 			bacArr.splice(index,1);
 			if(bacRemaining >= totBac) {
-				bacArr.push(new Bacteria(winKillAmt-bacRemaining + totBac - 1));
+				bacArr.push(new Bacteria(spawnedBac));
 				bacArr[totBac-1].spawn();
 			}
 		}
@@ -295,12 +327,26 @@ var main = function() {
 						if(this != bacArr[i]){
 							if(this.consuming.indexOf(bacArr[i]) == -1 && bacArr[i].consuming.indexOf(this) == -1) {
 								if(colliding(this.x, this.y, this.r, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
-									console.log(bacArr[i].id);
 									if(this.id < bacArr[i].id){
 										this.consuming.push(bacArr[i]);
-									} else {
-										bacArr[i].consuming.push(this);
 									}
+								}
+							} else {
+
+								// for(i in this.consuming){
+								//
+								// 	if(distance(this.x, this.y, this.consuming[i].x, this.consuming[i].y) <= (this.r - this.consuming[i].r)){
+								//
+								// 	} else {
+								// 		var xDiff = this.x - this.consuming[i].x;
+								// 		var yDiff = this.y - this.consuming[i].y;
+								// 		this.consuming[i].x += xDiff/60;
+								// 		this.consuming[i].y += yDiff/60;
+								// 		this.consuming[i].r -= 0.003;
+								// 		this.r += 0.001;
+								// 	}
+
+									//Move the consuming bacteria into the consumer
 								}
 							}
 						}
@@ -313,7 +359,6 @@ var main = function() {
 					 var ty = -1 * (this.y-1) * 300 - 8;
 					 ctx.fillText("" + this.id, tx, ty);
 					draw_circle(this.x, this.y, this.r, this.color);
-				}
 			}
 		}
 
@@ -361,6 +406,9 @@ var main = function() {
 			this.r = 0.06;
 			this.color = randomColor();
 			this.alive = true;
+			this.consuming = [];
+			spawnedBac++;
+			//console.log(this);
 		}
 	}
 
@@ -379,7 +427,7 @@ var main = function() {
 
 	//Create and push new Bacteria objects into bacArr, then spawn each Bacteria
 	for(var i = 0; i<totBac; i++){
-		bacArr.push(new Bacteria(i));
+		bacArr.push(new Bacteria(spawnedBac));
 		bacArr[i].spawn();
 	}
 
@@ -433,7 +481,7 @@ var main = function() {
 	var fpsOut = document.getElementById("fps");
 	setInterval(function(){
 		fpsOut.innerHTML = (1000/frameTime).toFixed(1) + "fps";
-		console.log(bacArr[0].consuming);
+		//console.log(bacArr);
 	}, 1000);
 
 }
