@@ -273,19 +273,31 @@ var main = function() {
 								}
 							} else {
 								for(i in this.consuming){
-									if(distance(this.x, this.y, this.consuming[i].x, this.consuming[i].y) <= (this.r - this.consuming[i].r)){
-										this.consuming[i].destroy(bacArr.indexOf(this.consuming[i]));
+									// Easier than typing this.consuming[i].* everytime
+									let consuming = this.consuming[i];
+									if(distance(this.x, this.y, consuming.x, consuming.y) <= (this.r - consuming.r)){
+										consuming.destroy(bacArr.indexOf(consuming));
 									} else {
-										var xDiff = this.x - this.consuming[i].x;
-										var yDiff = this.y - this.consuming[i].y;
+										var xDiff = this.x - consuming.x;
+										var yDiff = this.y - consuming.y;
 										/* While being consumed, the bacteria will
 										move in the direction of the consumer,
 										its radius will be shrunk and the consumer's
 										will grow */
-										this.consuming[i].x += xDiff/100;
-										this.consuming[i].y += yDiff/100;
-										this.consuming[i].r -= 0.002;
+										consuming.x += xDiff/100;
+										consuming.y += yDiff/100;
+										consuming.r -= 0.002;
 										this.r += 0.00065;
+										// this.color[0] += (this.color[0] - ((this.color[0] + consuming.color[0]) / 2))/500;
+										// this.color[1] += (this.color[1] - ((this.color[1] + consuming.color[1]) / 2))/500;
+										// this.color[2] += (this.color[2] - ((this.color[2] + consuming.color[2]) / 2))/500;
+										this.color[0] -= 0.002;
+										this.color[1] += 0.002;
+										this.color[2] -= 0.002;
+										this.color[3] += 0.001;
+										/* new color of equal radius would be:
+										[(this.color[0]+consuming.color[0])/2, (this.color[1]+consuming.color[1])/2, (this.color[2]+consuming.color[2])/2, 0.75]
+										*/
 									}
 								}
 							}
