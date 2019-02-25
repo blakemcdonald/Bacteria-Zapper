@@ -288,16 +288,9 @@ var main = function() {
 										consuming.y += yDiff/100;
 										consuming.r -= 0.002;
 										this.r += 0.00065;
-										// this.color[0] += (this.color[0] - ((this.color[0] + consuming.color[0]) / 2))/500;
-										// this.color[1] += (this.color[1] - ((this.color[1] + consuming.color[1]) / 2))/500;
-										// this.color[2] += (this.color[2] - ((this.color[2] + consuming.color[2]) / 2))/500;
-										this.color[0] -= 0.002;
-										this.color[1] += 0.002;
-										this.color[2] -= 0.002;
+										//Increase alpha of the bacteria causing it to become darker as it consumes.
 										this.color[3] += 0.001;
-										/* new color of equal radius would be:
-										[(this.color[0]+consuming.color[0])/2, (this.color[1]+consuming.color[1])/2, (this.color[2]+consuming.color[2])/2, 0.75]
-										*/
+
 									}
 								}
 							}
