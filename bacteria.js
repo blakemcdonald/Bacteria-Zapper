@@ -224,7 +224,7 @@ var main = function() {
 
 				// If theres a collision with a specific object, the variables need to be randomized again
 				// Also need to set i = -1 to ensure it loops through all bacteria again
-				if (colliding(tempXY[0], tempXY[1], 0.06, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
+				if (colliding(this.x, this.y, 0.06, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
 					this.getNewRandomTrigData();
 					this.getCircPoints();
 					attempt++;
