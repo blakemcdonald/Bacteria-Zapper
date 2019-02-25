@@ -135,16 +135,6 @@ var main = function() {
 
 	}
 
-	// Returns a random RGBA value
-	function randomColor() {
-		// times by 0.65 to ensure the bacteria isn't as light as the canvas
-		var r = (Math.random() * (0.65)).toFixed(2);
-		var g = (Math.random() * (0.65)).toFixed(2);
-		var b = (Math.random() * (0.65)).toFixed(2);
-
-		return [r,g,b,0.75];
-	}
-
 	// Uses radius and distance to determine if two objects are colliding
 	function colliding(x1, y1, r1, x2, y2, r2) {
 		var xDist = x2-x1;
@@ -244,7 +234,8 @@ var main = function() {
 
 			// Store new data for each Bacteria
 			this.r = 0.06;
-			this.color = randomColor();
+			// times by 0.65 to ensure the bacteria isn't as light as the canvas
+			this.color = [Math.random() * (0.65), Math.random() * (0.65), Math.random() * (0.65), 0.75];
 			this.alive = true;
 			this.consuming = [];
 			spawnedBac++;
