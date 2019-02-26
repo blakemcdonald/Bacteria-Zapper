@@ -261,6 +261,9 @@ var main = function() {
 						this.r += 0.0003;
 					}
 
+					//increase alpha as bacteria grows
+					this.color[3] += 0.0003;
+
 					/* Collision Check with consuming assigning,
 						 finds which bacteria are colliding and sets the larger one to consume the other */
 					for(i in bacArr) {
