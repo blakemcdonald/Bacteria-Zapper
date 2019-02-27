@@ -155,6 +155,11 @@ var main = function() {
 		return Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
 	}
 
+	function normalize(x1, y1, x2, y2) {
+		let m = distance(x1, y1, x2, y2);
+		return [(x2-x1)/m, (y2-y1)/m];
+	}
+
 	// Assign function to mouse click
 	canvas.onmousedown = function(e, canvas){click(e, gameSurface);};
 
@@ -267,29 +272,32 @@ var main = function() {
 					/* Collision Check with consuming assigning,
 						 finds which bacteria are colliding and sets the larger one to consume the other */
 					for(i in bacArr) {
+						//Skip itself
 						if(this != bacArr[i]){
+							//If either 'this' or bacArr[i] are not in each other's 'consuming' array - continue.
 							if(this.consuming.indexOf(bacArr[i]) == -1 && bacArr[i].consuming.indexOf(this) == -1) {
+								//If 'this' and bacArr[i] are colliding add it to this bacteria with the larger radius' 'consuming' array
 								if(colliding(this.x, this.y, this.r, bacArr[i].x, bacArr[i].y, bacArr[i].r)) {
 									if(this.id < bacArr[i].id){
 										this.consuming.push(bacArr[i]);
 									}
 								}
-							} else {
-								for(i in this.consuming){
+							// Else if bacArr[i] is in this.consuming, have 'this' consume bacArr[i] by moving it inside of 'this' and shrinking it's radius
+						} else {
+								for(i in this.consuming) {
 									// Easier than typing this.consuming[i].* everytime
 									let consuming = this.consuming[i];
-									if(distance(this.x, this.y, consuming.x, consuming.y) <= (this.r - consuming.r)){
+									if(distance(this.x, this.y, consuming.x, consuming.y) <= (this.r - consuming.r) || consuming.r <= 0.0){
 										consuming.destroy(bacArr.indexOf(consuming));
 									} else {
-										var xDiff = this.x - consuming.x;
-										var yDiff = this.y - consuming.y;
+										var dVec = normalize(this.x, this.y, consuming.x, consuming.y);
 										/* While being consumed, the bacteria will
 										move in the direction of the consumer,
 										its radius will be shrunk and the consumer's
 										will grow */
-										consuming.x += xDiff/100;
-										consuming.y += yDiff/100;
-										consuming.r -= 0.002;
+										consuming.x -= dVec[0]/(1800*consuming.r);
+										consuming.y -= dVec[1]/(1800*consuming.r);
+										consuming.r -= 0.0025;
 										this.r += 0.00065;
 										//Increase alpha of the bacteria causing it to become darker as it consumes.
 										this.color[3] += 0.001;
