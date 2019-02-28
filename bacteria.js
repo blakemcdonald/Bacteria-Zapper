@@ -15,6 +15,15 @@ var main = function() {
 	var bacRemaining = winKillAmt;
 	var lives = 2;
 	var spawnedBac = 0;
+	var clickedPoints = [];
+	// Set radius and size for game-circle
+	var r=0.8;
+	var i=0.5;
+	// Variables for Bacteria data
+	var totBac = 10;
+	var bacArr = [];
+	var rAngle = 0;
+	var tempXY = [];
 
 	// Variables for calculating fps
 	var filterStrength = 20;
@@ -26,7 +35,7 @@ var main = function() {
 
 	var textCanvas = document.getElementById('text');
 	var ctx = textCanvas.getContext('2d')
-	ctx.font = "80px Verdana";
+	ctx.font = "20px Verdana";
 	ctx.textAlign = "center";
 
 	// Vertex and fragement shader source
@@ -167,22 +176,30 @@ var main = function() {
 	function click(e, canvas) {
 		var x = e.clientX;
 		var y = e.clientY;
+		var start = y;
 		var hit = false;
+		var hitPoints = 0;
 		var rect = e.target.getBoundingClientRect();
 		//Convert default canvas coords to webgl vector coords
 		x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
 		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
+		// Converts wegbl coords to canvas coords
+		// var tx = (this.x + 8/300 + 1) * 300;
+		// var ty = -1 * (this.y-1) * 300 - 8;
 
 		// Loop through all bacteria and check if you clicked within the radius of any
 		// Increase score and destroy the bacteria
 		for(let i in bacArr) {
 			if(colliding(x, y, 0, bacArr[i].x, bacArr[i].y, bacArr[i].r)){
- 			 	score = Math.round(score + (1/bacArr[i].r));
+				hitPoints = Math.round(1/bacArr[i].r);
+ 			 	score += hitPoints;
+				//ctx.fillText("+ " + Math.round(1/bacArr[i].r), e.clientX, e.clientY);
 				bacArr[i].destroy(i);
  			 	hit = true;
-				// Break ensures you can't click multiple bacteria at once
-				break;
-			}
+				clickedPoints.push({pts: hitPoints, x: e.clientX, y: e.clientY, dY: 0});
+			 	// Break ensures you can't click multiple bacteria at once
+			 	break;
+			 }
 		}
 
 		// If you click and don't hit a bacteria, your score is decreased by 20 + the total amount of times you've clicked.
@@ -287,9 +304,11 @@ var main = function() {
 								for(i in this.consuming) {
 									// Easier than typing this.consuming[i].* everytime
 									let consuming = this.consuming[i];
+									// If the consuming bacteria has fully entered the larger bacteria, destroy the consumed
 									if(distance(this.x, this.y, consuming.x, consuming.y) <= (this.r - consuming.r) || consuming.r <= 0.0){
 										consuming.destroy(bacArr.indexOf(consuming));
 									} else {
+										// Normalize vector in order to ensure consistent consumption. Specifically to the speed of consumption
 										var dVec = normalize(this.x, this.y, consuming.x, consuming.y);
 										/* While being consumed, the bacteria will
 										move in the direction of the consumer,
@@ -298,10 +317,9 @@ var main = function() {
 										consuming.x -= dVec[0]/(1800*consuming.r);
 										consuming.y -= dVec[1]/(1800*consuming.r);
 										consuming.r -= 0.0025;
-										this.r += 0.00065;
+										this.r += 0.01*consuming.r;
 										//Increase alpha of the bacteria causing it to become darker as it consumes.
 										this.color[3] += 0.001;
-
 									}
 								}
 							}
@@ -309,9 +327,6 @@ var main = function() {
 					}
 				}
 				// Draw
-				// Converts wegbl coords to canvas coords
-				// var tx = (this.x + 8/300 + 1) * 300;
-				// var ty = -1 * (this.y-1) * 300 - 8;
 				draw_circle(this.x, this.y, this.r, this.color);
 			}
 		}
@@ -374,19 +389,6 @@ var main = function() {
 		}
 	} // End of Bacteria class
 
-	// Set radius and size for game-circle
-	var r=0.8;
-	var i=0.5;
-
-	// Radius for bacteria
-	var size=0.06;
-
-	// Variables for Bacteria data
-	var totBac = 10;
-	var bacArr = [];
-	var rAngle = 0;
-	var tempXY = [];
-
 	// Create and push new Bacteria objects into bacArr, then spawn each Bacteria
 	for(var i = 0; i<totBac; i++){
 		bacArr.push(new Bacteria(spawnedBac));
@@ -395,6 +397,9 @@ var main = function() {
 
 	function winCondition(){
 		 if(lives > 0 && bacRemaining <= 0) {
+			//ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.fillStyle = "green";
+			ctx.font = "80px Verdana";
 			ctx.fillText("You win!", 300, 300);
 		 	return true;
 		 }
@@ -403,6 +408,9 @@ var main = function() {
 
 	function loseCondition(){
 		if(lives<=0) {
+			//ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.font = "80px Verdana";
+			ctx.fillStyle = "red";
 			ctx.fillText("Game over", 300, 300);
 			ctx.font = "40px Verdana";
 			ctx.fillText("You lose...", 310, 355);
@@ -421,13 +429,32 @@ var main = function() {
 		if(!winCondition() && lives > 0) {
 			for (let i in bacArr) {
 					bacArr[i].update();
-
 					if (loseCondition()) {
 						bacRemaining = 0;
 						break;
 					}
 				}
+
+				// Used for displaying points awarded on clicks
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				for(i in clickedPoints) {
+					// Variable for change in y position of each point
+					clickedPoints[i].dY--;
+					// If the point's y has changed by 50, remove the point from the array
+					if(clickedPoints[i].dY <= -50){
+						clickedPoints.splice(i,1);
+					} else {
+						// Alpha of the points approaches zero as it reaches its max change in y to simulate a fade out
+						ctx.fillStyle = "rgba(0, 255, 0, " + (1.0 - (clickedPoints[i].dY * -0.02) + "");
+						// Print the points awarded and move them upwards
+						ctx.fillText("+ " + clickedPoints[i].pts, clickedPoints[i].x, clickedPoints[i].y + clickedPoints[i].dY);
+					}
+				}
+				// Just to ensure the game over text is printed. Need to fix this mess up.
+				loseCondition();
 			}
+
+
 
 		// Draw the game surface circle
 		draw_circle(0,0,0.8,[0.05, 0.1, 0.05, 0.5]);
