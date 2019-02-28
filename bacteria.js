@@ -93,6 +93,10 @@ var main = function() {
 	gl.linkProgram(shaderProgram);
 	gl.useProgram(shaderProgram);
 
+	// Clear the buffer, then bind the vertex buffer
+	// gl.bindBuffer(gl.ARRAY_BUFFER, null);
+	// gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+
 	// Get the attribute and uniform location
 	var coord = gl.getAttribLocation(shaderProgram, "coordinates");
 	var fColor = gl.getUniformLocation(shaderProgram, "fColor");
@@ -129,10 +133,6 @@ var main = function() {
 
 		// Pass the vertex data to the buffer
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-		// Clear the buffer, then bind the vertex buffer
-		gl.bindBuffer(gl.ARRAY_BUFFER, null);
-		gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
 
 		// Pass color data to uniform fColor
 		gl.uniform4f(fColor, color[0], color[1], color[2], color[3]);
