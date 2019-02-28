@@ -25,10 +25,6 @@ var main = function() {
 	var rAngle = 0;
 	var tempXY = [];
 
-	// Variables for calculating fps
-	var filterStrength = 20;
-	var frameTime = 0, lastloop = new Date, thisLoop;
-
 	// Creating a WebGL Context Canvas and also a 2D Context Canvas for displaying text
 	var canvas = document.getElementById('gameSurface');
 	var gl = canvas.getContext('webgl');
@@ -174,12 +170,12 @@ var main = function() {
 
 	// Function click
 	function click(e, canvas) {
-		var x = e.clientX;
-		var y = e.clientY;
-		var start = y;
-		var hit = false;
-		var hitPoints = 0;
-		var rect = e.target.getBoundingClientRect();
+		let x = e.clientX;
+		let y = e.clientY;
+		let start = y;
+		let hit = false;
+		let ptsInc = 0;
+		const rect = e.target.getBoundingClientRect();
 		//Convert default canvas coords to webgl vector coords
 		x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
 		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
@@ -191,12 +187,12 @@ var main = function() {
 		// Increase score and destroy the bacteria
 		for(let i in bacArr) {
 			if(colliding(x, y, 0, bacArr[i].x, bacArr[i].y, bacArr[i].r)){
-				hitPoints = Math.round(1/bacArr[i].r);
- 			 	score += hitPoints;
+				ptsInc = Math.round(1/bacArr[i].r);
+ 			 	score += ptsInc;
 				//ctx.fillText("+ " + Math.round(1/bacArr[i].r), e.clientX, e.clientY);
 				bacArr[i].destroy(i);
  			 	hit = true;
-				clickedPoints.push({pts: hitPoints, x: e.clientX, y: e.clientY, dY: 0});
+				clickedPoints.push({pts: ptsInc, x: e.clientX, y: e.clientY, dY: 0});
 			 	// Break ensures you can't click multiple bacteria at once
 			 	break;
 			 }
@@ -397,8 +393,9 @@ var main = function() {
 
 	function winCondition(){
 		 if(lives > 0 && bacRemaining <= 0) {
-			//ctx.clearRect(0, 0, canvas.width, canvas.height);
-			ctx.fillStyle = "green";
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			clickedPoints = [];
+			ctx.fillStyle = "rgba(0, 255, 0, 1.0)";
 			ctx.font = "80px Verdana";
 			ctx.fillText("You win!", 300, 300);
 		 	return true;
@@ -419,12 +416,12 @@ var main = function() {
 		return false;
 	}
 
-	var timer = setInterval(function(){
+	// Game Loop
+	setInterval(function(){
 		// Updates the score span element in the html
 		document.getElementById('scoreDisplay').innerHTML=score;
 		document.getElementById('bacRemaining').innerHTML=bacRemaining;
 		document.getElementById('lives').innerHTML=lives;
-		timer++;
 
 		if(!winCondition() && lives > 0) {
 			for (let i in bacArr) {
@@ -459,16 +456,6 @@ var main = function() {
 		// Draw the game surface circle
 		draw_circle(0,0,0.8,[0.05, 0.1, 0.05, 0.5]);
 
-		// Information for FPS
-		var thisFrameTime = (thisLoop = new Date) - lastloop;
-		frameTime += (thisFrameTime - frameTime) / filterStrength;
-		lastloop = thisLoop;
-
 	}, 1000/60);
 
-	// Displays the FPS to the fps span within the html
-	var fpsOut = document.getElementById("fps");
-	setInterval(function(){
-		fpsOut.innerHTML = (1000/frameTime).toFixed(1) + "fps";
-	}, 1000);
 }
