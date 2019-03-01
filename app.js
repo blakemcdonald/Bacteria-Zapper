@@ -16,6 +16,7 @@ var main = function() {
 	var lives = 2;
 	var spawnedBac = 0;
 	var clickedPoints = [];
+	var particles = [];
 	// Set radius and size for game-circle
 	var r=0.8;
 	var i=0.5;
@@ -417,7 +418,7 @@ var main = function() {
 	}
 
 	// Game Loop
-	setInterval(function(){
+	function gameLoop() {
 		// Updates the score span element in the html
 		document.getElementById('scoreDisplay').innerHTML=score;
 		document.getElementById('bacRemaining').innerHTML=bacRemaining;
@@ -433,7 +434,7 @@ var main = function() {
 				}
 
 				// Used for displaying points awarded on clicks
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				//ctx.clearRect(0, 0, canvas.width, canvas.height);
 				for(i in clickedPoints) {
 					// Variable for change in y position of each point
 					clickedPoints[i].dY--;
@@ -441,6 +442,8 @@ var main = function() {
 					if(clickedPoints[i].dY <= -50){
 						clickedPoints.splice(i,1);
 					} else {
+						ctx.clearRect(clickedPoints[i].x - 25, clickedPoints[i].y + clickedPoints[i].dY - 20, clickedPoints[i].x + 20, clickedPoints[i].y + 20);
+						ctx.beginPath();
 						// Alpha of the points approaches zero as it reaches its max change in y to simulate a fade out
 						ctx.fillStyle = "rgba(0, 255, 0, " + (1.0 - (clickedPoints[i].dY * -0.02) + "");
 						// Print the points awarded and move them upwards
@@ -451,11 +454,9 @@ var main = function() {
 				loseCondition();
 			}
 
-
-
 		// Draw the game surface circle
 		draw_circle(0,0,0.8,[0.05, 0.1, 0.05, 0.5]);
-
-	}, 1000/60);
-
+		requestAnimationFrame(gameLoop);
+	}
+	requestAnimationFrame(gameLoop);
 }
