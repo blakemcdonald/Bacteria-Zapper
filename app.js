@@ -239,7 +239,7 @@ var main = function() {
 		}
 
 		// If you click and don't hit a bacteria, your score is decreased by 20 + the total amount of times you've clicked.
-		if(!hit) {
+		if(!hit && bacRemaining != 0) {
 			missClicks ++;
 			clickedPoints.push({
 				pts: -20 - missClicks,
