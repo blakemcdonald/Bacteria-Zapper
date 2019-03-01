@@ -227,11 +227,11 @@ var main = function() {
 				bacArr[i].destroy(i);
  			 	hit = true;
 				clickedPoints.push({
-					pts: ptsInc,
+					pts: "+" + ptsInc,
 					x: e.clientX,
 					y: e.clientY,
 					dY: 0,
-					color: "rgba(0,255,0,"
+					color: "rgba(0,200,0,"
 				});
 			 	// Break ensures you can't click multiple bacteria at once
 			 	break;
