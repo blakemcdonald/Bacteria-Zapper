@@ -226,7 +226,13 @@ var main = function() {
  			 	score += ptsInc;
 				bacArr[i].destroy(i);
  			 	hit = true;
-				clickedPoints.push({pts: ptsInc, x: e.clientX, y: e.clientY, dY: 0});
+				clickedPoints.push({
+					pts: ptsInc,
+					x: e.clientX,
+					y: e.clientY,
+					dY: 0,
+					color: "rgba(0,255,0,"
+				});
 			 	// Break ensures you can't click multiple bacteria at once
 			 	break;
 			 }
@@ -234,8 +240,15 @@ var main = function() {
 
 		// If you click and don't hit a bacteria, your score is decreased by 20 + the total amount of times you've clicked.
 		if(!hit) {
-			score -= (20 + missClicks);
 			missClicks ++;
+			clickedPoints.push({
+				pts: -20 - missClicks,
+				x: e.clientX,
+				y: e.clientY,
+				dY: 0,
+				color: "rgba(255,0,0,"
+			});
+			score -= (20 + missClicks);
 		}
 	}
 
@@ -423,7 +436,7 @@ var main = function() {
 			}
 			this.life = 30 + Math.random() * 10;
 			// Will be used to clean out particle array at certain times.
-			this.deltaStart = Date.now();
+			//this.deltaStart = Date.now();
 		}
 
 		draw() {
@@ -454,6 +467,7 @@ var main = function() {
 		 if(lives > 0 && bacRemaining <= 0) {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			clickedPoints = [];
+			particles = [];
 			ctx.fillStyle = "rgba(0, 255, 0, 1.0)";
 			ctx.font = "80px Verdana";
 			ctx.fillText("You win!", 300, 300);
@@ -464,7 +478,7 @@ var main = function() {
 
 	function loseCondition(){
 		if(lives<=0) {
-			//ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			ctx.font = "80px Verdana";
 			ctx.fillStyle = "red";
 			ctx.fillText("Game over", 300, 300);
@@ -502,9 +516,9 @@ var main = function() {
 						// Clear canvas only around specific text
 						ctx.clearRect(clickedPoints[i].x - 25, clickedPoints[i].y + clickedPoints[i].dY - 20, clickedPoints[i].x + 20, clickedPoints[i].y + 20);
 						// Alpha of the points approaches zero as it reaches its max change in y to simulate a fade out
-						ctx.fillStyle = "rgba(0, 255, 0, " + (1.0 - (clickedPoints[i].dY * -0.02) + "");
+						ctx.fillStyle = clickedPoints[i].color + (1.0 - (clickedPoints[i].dY * -0.02) + ")");
 						// Print the points awarded and move them upwards
-						ctx.fillText("+ " + clickedPoints[i].pts, clickedPoints[i].x, clickedPoints[i].y + clickedPoints[i].dY);
+						ctx.fillText(clickedPoints[i].pts, clickedPoints[i].x, clickedPoints[i].y + clickedPoints[i].dY);
 					}
 				}
 
