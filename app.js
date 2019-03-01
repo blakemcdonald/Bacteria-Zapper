@@ -17,6 +17,7 @@ var main = function() {
 	var spawnedBac = 0;
 	var clickedPoints = [];
 	var particles = [];
+	var reduceVariable = 90;
 	// Set radius and size for game-circle
 	var r=0.8;
 	var i=0.5;
@@ -26,12 +27,17 @@ var main = function() {
 	var rAngle = 0;
 	var tempXY = [];
 
-	// Creating a WebGL Context Canvas and also a 2D Context Canvas for displaying text
+	// Creating a WebGL Context Canvas
 	var canvas = document.getElementById('gameSurface');
 	var gl = canvas.getContext('webgl');
-
+	// Creating a 2D Canvas for displaying text
 	var textCanvas = document.getElementById('text');
 	var ctx = textCanvas.getContext('2d')
+	// Creating a 2D Canvas for particles
+	var particlesCanvas = document.getElementById('particles');
+	var pCtx = particlesCanvas.getContext('2d')
+
+	// Set font for text Canvas
 	ctx.font = "20px Verdana";
 	ctx.textAlign = "center";
 
@@ -89,10 +95,6 @@ var main = function() {
 	// Link and use
 	gl.linkProgram(shaderProgram);
 	gl.useProgram(shaderProgram);
-
-	// Clear the buffer, then bind the vertex buffer
-	// gl.bindBuffer(gl.ARRAY_BUFFER, null);
-	// gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
 
 	// Get the attribute and uniform location
 	var coord = gl.getAttribLocation(shaderProgram, "coordinates");
@@ -166,6 +168,40 @@ var main = function() {
 		return [(x2-x1)/m, (y2-y1)/m];
 	}
 
+	function createExplosionAtBacteria(bac){
+		// Convert Bacteria(WebGL) data into canvas data
+		let bacX = (bac.x + 2/75 + 1) * 300;
+		let bacY = -1 * (bac.y-1) * 300 - 8;
+		let r = (((bac.x + bac.r) + 2/75 + 1) * 300) - bacX;
+		let num = 0;
+		let pColor = bac.color;
+
+		// Loops through the bacteria's x and y and spawn particles there
+		for(let x = 0; x < r; x++){
+			for(let y = 0; y < r; y++){
+				//Helps decrease amount of particles
+				if(num % reduceVariable == 0) {
+
+					let ppX = bacX + x;
+					let ppY = bacY + y;
+					let npX = bacX - x;
+					let npY = bacY - y;
+
+					// Create a corresponding particle for each "quandrant" of the bacteria
+					let particle = new Particle(ppX, ppY, 5, bac.color);
+					particles.push(particle);
+					particle = new Particle(npX, npY, 5, bac.color);
+					particles.push(particle);
+					particle = new Particle(ppX, npY, 5, bac.color);
+					particles.push(particle);
+					particle = new Particle(npX, ppY, 5, bac.color);
+					particles.push(particle);
+
+				}
+				num++;
+			}
+		}
+	}
 	// Assign function to mouse click
 	canvas.onmousedown = function(e, canvas){click(e, gameSurface);};
 
@@ -180,17 +216,14 @@ var main = function() {
 		//Convert default canvas coords to webgl vector coords
 		x = ((x - rect.left) - canvas.width/2)/(canvas.width/2);
 		y = (canvas.height/2 - (y - rect.top))/(canvas.height/2);
-		// Converts wegbl coords to canvas coords
-		// var tx = (this.x + 8/300 + 1) * 300;
-		// var ty = -1 * (this.y-1) * 300 - 8;
 
 		// Loop through all bacteria and check if you clicked within the radius of any
 		// Increase score and destroy the bacteria
 		for(let i in bacArr) {
 			if(colliding(x, y, 0, bacArr[i].x, bacArr[i].y, bacArr[i].r)){
 				ptsInc = Math.round(1/bacArr[i].r);
+				createExplosionAtBacteria(bacArr[i]);
  			 	score += ptsInc;
-				//ctx.fillText("+ " + Math.round(1/bacArr[i].r), e.clientX, e.clientY);
 				bacArr[i].destroy(i);
  			 	hit = true;
 				clickedPoints.push({pts: ptsInc, x: e.clientX, y: e.clientY, dY: 0});
@@ -376,6 +409,41 @@ var main = function() {
 		}
 	} // End of Bacteria class
 
+	class Particle {
+
+		constructor(x, y, r, color) {
+			this.x = x;
+			this.y = y;
+			this.r = r + Math.random() * 5;
+			// Convert 1.0, 1.0, 1.0 rgb data to 255, 255, 255
+			this.color = "rgba(" + Math.round((1*color[0]) * 255) + "," + Math.round((1*color[1]) * 255) + "," + Math.round((1*color[2]) * 255) + "," + Math.random()*0.85 + ")";
+			this.speed = {
+				x: -1 + Math.random() * 3,
+				y: -1 + Math.random() * 3
+			}
+			this.life = 30 + Math.random() * 10;
+			// Will be used to clean out particle array at certain times.
+			this.deltaStart = Date.now();
+		}
+
+		draw() {
+
+			// Draw if it hasn't reached it's lifespan or if its not too small
+			if(this.life > 0 && this.r > 0) {
+				pCtx.beginPath();
+				pCtx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+				pCtx.fillStyle = this.color;
+				pCtx.fill();
+
+				// Update data
+				this.life--;
+				this.r -= 0.25;
+				this.x += this.speed.x;
+				this.y += this.speed.y;
+			}
+		}
+	} // End of Particle Class
+
 	// Create and push new Bacteria objects into bacArr, then spawn each Bacteria
 	for(var i = 0; i<totBac; i++){
 		bacArr.push(new Bacteria(spawnedBac));
@@ -438,6 +506,12 @@ var main = function() {
 						// Print the points awarded and move them upwards
 						ctx.fillText("+ " + clickedPoints[i].pts, clickedPoints[i].x, clickedPoints[i].y + clickedPoints[i].dY);
 					}
+				}
+
+				// Loop through all particles to draw
+				pCtx.clearRect(0, 0, canvas.width, canvas.height);
+				for(i in particles) {
+					particles[i].draw();
 				}
 				// Just to ensure the game over text is printed. Need to fix this mess up.
 				loseCondition();

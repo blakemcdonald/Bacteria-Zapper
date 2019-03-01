@@ -17,11 +17,18 @@
             top: 0px
             z-index: 10;
           }
+          #particles {
+            position: absolute;
+            pointer-events: none;
+            left: 0px;
+            top: 0px
+            z-index: 2;
+          }
           p {
             color:blue;
           }
         </style>
-        
+
         <script src="app.js"> </script>
     </head>
 
@@ -30,7 +37,8 @@
           <canvas id="gameSurface" width="600" height="600">
             use browser that supports canvas
           </canvas>
-          <canvas id="text" width="600" height="600"></canvas>
+          <canvas id="particles" width="600" height="600"></canvas>
+          <canvas id="text" width="600" height="600"></canvas>      
         </div>
 
 

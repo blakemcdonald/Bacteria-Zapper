@@ -17,4 +17,4 @@ A basic JavaScript game using WebGL in which the player must act fast and click 
 # Bonus Features Checklist
 1.	The effect of the poison administered also propagates outward from the point of insertion of the position until all the bacteria are destroyed.
 2.	When two bacteria cultures collide, the first one to appear on the circumference dominates and consumes the later generated bacteria. ✔
-3.	When a bacterial culture is hit, use a simple 2D particle system to simulate an explosion at the point where the poison is administered.
+3.	When a bacterial culture is hit, use a simple 2D particle system to simulate an explosion at the point where the poison is administered. ✔
