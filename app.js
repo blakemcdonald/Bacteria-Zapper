@@ -269,17 +269,7 @@ var main = function() {
 					this.destroy(bacArr.indexOf(this));
 				} else {
 					// Increase the size of each bacteria by 0.0003 each tick
-					// Bacteria grow faster when a certain score threshold is met
-					if (score > 400) {
-						this.r += 0.0005;
-					} else if (score > 1000) {
-						this.r += 0.0008;
-					} else if (score > 2000) {
-						this.r += 0.0014;
-					} else {
 						this.r += 0.0003;
-					}
-
 					//increase alpha as bacteria grows
 					this.color[3] += 0.0003;
 
@@ -434,7 +424,6 @@ var main = function() {
 				}
 
 				// Used for displaying points awarded on clicks
-				//ctx.clearRect(0, 0, canvas.width, canvas.height);
 				for(i in clickedPoints) {
 					// Variable for change in y position of each point
 					clickedPoints[i].dY--;
@@ -442,8 +431,8 @@ var main = function() {
 					if(clickedPoints[i].dY <= -50){
 						clickedPoints.splice(i,1);
 					} else {
+						// Clear canvas only around specific text
 						ctx.clearRect(clickedPoints[i].x - 25, clickedPoints[i].y + clickedPoints[i].dY - 20, clickedPoints[i].x + 20, clickedPoints[i].y + 20);
-						ctx.beginPath();
 						// Alpha of the points approaches zero as it reaches its max change in y to simulate a fade out
 						ctx.fillStyle = "rgba(0, 255, 0, " + (1.0 - (clickedPoints[i].dY * -0.02) + "");
 						// Print the points awarded and move them upwards
